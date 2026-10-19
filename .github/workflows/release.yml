@@ -1,0 +1,101 @@
+name: Desktop release
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            platform: mac
+            arch: arm64
+          - os: macos-15-intel
+            platform: mac
+            arch: x64
+          - os: windows-latest
+            platform: win
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Check release version
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: node -e 'if(process.env.GITHUB_REF !== "refs/tags/v"+require("./package.json").version)process.exit(1)'
+      - run: npm ci
+      - run: npm test
+      - name: Package installer
+        run: npm run package -- --${{ matrix.platform }} --${{ matrix.arch }}
+      - name: Install and launch macOS DMG
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          ARCH: ${{ matrix.arch }}
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          MOUNT="$RUNNER_TEMP/aurora-dmg"
+          mkdir -p "$MOUNT"
+          hdiutil attach "distribution/$VERSION/Aurora-$VERSION-mac-$ARCH.dmg" -nobrowse -readonly -mountpoint "$MOUNT"
+          trap 'hdiutil detach "$MOUNT"' EXIT
+          ditto "$MOUNT/Aurora.app" "$RUNNER_TEMP/aurora-installed/Aurora.app"
+          node scripts/package-smoke.mjs "$RUNNER_TEMP/aurora-installed/Aurora.app/Contents/MacOS/Aurora"
+      - name: Install and launch Windows EXE
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = node -p 'require("./package.json").version'
+          $installer = Get-Item "distribution/$version/Aurora-$version-windows-x64.exe"
+          $target = Join-Path $env:RUNNER_TEMP 'AuroraInstalled'
+          $process = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$target" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
+          node scripts/package-smoke.mjs "$target/Aurora.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            distribution/*/Aurora-*.dmg
+            distribution/*/Aurora-*.zip
+            distribution/*/Aurora-*.exe
+          if-no-files-found: error
+          retention-days: 14
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: package-qa-${{ matrix.platform }}-${{ matrix.arch }}
+          path: artifacts/*.png
+          if-no-files-found: ignore
+          retention-days: 7
+  publish:
+    needs: package
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          merge-multiple: true
+          path: release-assets
+      - name: Publish verified installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/publish-release.mjs

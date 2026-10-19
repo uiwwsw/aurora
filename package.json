@@ -1,6 +1,6 @@
 {
   "name": "aurora-desktop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Aurora — one conversation, assisted organization, and model routing previews.",
@@ -9,7 +9,12 @@
     "build": "tsc --noEmit && vite build",
     "start": "npm run build && electron .",
     "test": "tsx --test tests/*.test.ts",
-    "test:desktop": "npm run build && node scripts/desktop-smoke.mjs"
+    "test:desktop": "npm run build && node scripts/desktop-smoke.mjs",
+    "icons": "node scripts/icons.mjs",
+    "package": "npm run build && npm run icons && node scripts/package.mjs",
+    "package:mac": "npm run package -- --mac",
+    "package:win": "npm run package -- --win --x64",
+    "test:package": "node scripts/package-smoke.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.59.0",
@@ -18,11 +23,13 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",
+    "@resvg/resvg-js": "^2.6.2",
     "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "electron": "^44.9.0",
+    "electron-builder": "^26.15.3",
     "prettier": "^3.9.10",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
@@ -39,5 +46,6 @@
   "bugs": {
     "url": "https://github.com/uiwwsw/aurora/issues"
   },
-  "homepage": "https://github.com/uiwwsw/aurora#readme"
+  "homepage": "https://github.com/uiwwsw/aurora#readme",
+  "author": "uiwwsw"
 }
