@@ -1,0 +1,46 @@
+appId: com.uiwwsw.aurora
+productName: Aurora
+asar: true
+compression: normal
+directories:
+  output: distribution/${version}
+  buildResources: build
+files:
+  - dist/**/*
+  - electron/**/*
+  - src/catalog.json
+  - package.json
+  - "!**/.env*"
+  - "!**/artifacts/**"
+  - "!**/tests/**"
+mac:
+  target: [dmg, zip]
+  category: public.app-category.productivity
+  icon: build/icon.png
+  identity: "-"
+  notarize: false
+  artifactName: Aurora-${version}-mac-${arch}.${ext}
+dmg:
+  title: Aurora ${version}
+  contents:
+    - x: 140
+      y: 190
+      type: file
+    - x: 430
+      y: 190
+      type: link
+      path: /Applications
+win:
+  target: [nsis]
+  icon: build/icon.png
+  artifactName: Aurora-${version}-windows-${arch}.${ext}
+nsis:
+  oneClick: false
+  perMachine: false
+  allowElevation: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  deleteAppDataOnUninstall: false
+  runAfterFinish: false
+publish: null
