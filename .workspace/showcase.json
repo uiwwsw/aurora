@@ -7,22 +7,26 @@
   "symbol": "✦",
   "color": "#c0cfa5",
   "summary": "작업 범위와 예상 토큰을 검토하는 데스크톱 AI 작업 공간",
-  "description": "macOS·Windows를 목표로 개발하는 AI 작업 공간입니다. 하나의 대화와 레거시 모드, 모델·토큰 검토를 제공하며 내부 분석 모델과 실행 모델을 독립 설정합니다. OpenAI·Anthropic API 텍스트 호출 경로를 구현했지만 실제 키를 사용하는 라이브 호출은 아직 검증하지 않았습니다. 토큰 비교는 등급별 가정이고 계정 잔여 한도·전체 작업 예산 제어는 미연결입니다.",
+  "description": "macOS·Windows용 개발 프리뷰입니다. 작업 정리와 레거시 모드, 내부 분석·실행 모델 설정 및 토큰 가정 비교를 제공합니다. macOS Apple Silicon·Intel DMG와 Windows x64 EXE 설치 파일을 공개했습니다. 현재 배포 인증서 서명·macOS 공증은 없으며 실제 API 라이브 호출과 계정 잔여 한도·전체 예산 제어는 미검증/미연결입니다.",
   "features": [
     "하나의 대화와 작업 정리·레거시 모드",
-    "내부 분석 모델과 실행 모델의 독립 기본 설정",
-    "요청마다 실행 모델 선택과 토큰 가정 비교",
-    "OpenAI·Claude API 어댑터와 응답 사용량 표시"
+    "내부 분석·실행 모델 설정과 요청별 선택",
+    "macOS Apple Silicon·Intel 및 Windows x64 설치 파일",
+    "모델·토큰 가정 검토와 선택적 로컬 저장"
   ],
   "status": "development",
   "links": [
     {
       "platform": "source",
       "url": "https://github.com/uiwwsw/aurora"
+    },
+    {
+      "platform": "package",
+      "url": "https://github.com/uiwwsw/aurora/releases/tag/v0.1.1"
     }
   ],
   "evidence": {
     "verifiedAt": "2026-10-19",
-    "note": "2026-10-19 공식 모델 문서를 확인하고 역할별 기본값 및 API 키 기반 텍스트 어댑터를 구현. 단위·어댑터 테스트 14개, macOS Electron UI에서 기본값·설정 유지·키 없음 차단·분석/실행 분리·오류 시 원문 유지 검증. API 응답은 모의 처리했으며 라이브 과금 요청은 하지 않음. Windows 앱 실행·전체 예산 강제 제어·계정 잔여량은 미검증/미연결."
+    "note": "2026-10-19 v0.1.1 Desktop release CI(39197323796)가 macOS arm64·Intel·Windows x64 네이티브 환경의 테스트·패키징·설치 후 실행 검증과 게시까지 성공함. DMG 2개·ZIP 2개·EXE 1개를 공개하고 비인증 HTTP 200, 파일 크기·GitHub SHA-256 digest·manifest 일치를 확인함. macOS는 ad-hoc 서명이며 Developer ID 서명·공증 및 Windows 인증서 서명은 없음. 완성 제품 출시를 주장하지 않는 개발 프리뷰로 development 상태 유지."
   }
 }
