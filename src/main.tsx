@@ -2,14 +2,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Activity,
+  Archive,
   ArrowUp,
   ArrowUpRight,
   Check,
-  ChevronDown,
   ChevronRight,
   CircleHelp,
-  Command,
   Folder,
+  Layers,
   Menu,
   MessageSquare,
   PanelLeft,
@@ -18,124 +18,128 @@ import {
   Search,
   Settings2,
   Sparkles,
+  Trash2,
+  Undo2,
   X,
-  Zap,
 } from "lucide-react";
 import {
+  Bundle,
   Chat,
+  Estimate,
+  LEGACY_KEY,
+  Proposal,
   STORAGE_KEY,
   Tier,
-  UsageWindow,
+  Workspace,
+  activeContext,
+  estimate,
   makePreview,
-  parseStoredChats,
-  remainingPercent,
-  resetText,
+  organize,
+  propose,
+  restoreWorkspace,
   tierNames,
 } from "./domain";
 import "./style.css";
-
-const prompts = [
-  {
-    icon: MessageSquare,
-    title: "가볍게 정리하기",
-    text: "아래 글을 세 문장으로 요약해 줘.",
-    note: "요약 · 번역 · 글쓰기",
-  },
-  {
-    icon: Command,
-    title: "함께 문제 풀기",
-    text: "이 코드의 문제를 찾아 해결 방법을 제안해 줘.",
-    note: "코드 · 디버깅 · 분석",
-  },
-  {
-    icon: Sparkles,
-    title: "깊이 생각하기",
-    text: "데스크톱 앱의 동기화 아키텍처를 설계해 줘.",
-    note: "설계 · 추론 · 복잡한 작업",
-  },
-];
-function readSaved() {
+function readSaved(): Workspace {
   try {
-    return parseStoredChats(localStorage.getItem(STORAGE_KEY));
+    return restoreWorkspace(
+      localStorage.getItem(STORAGE_KEY),
+      localStorage.getItem(LEGACY_KEY),
+    );
   } catch {
-    return [];
+    return restoreWorkspace(null, null);
   }
 }
+const range = (numbers: [number, number]) =>
+  numbers.map((n) => Math.ceil(n).toLocaleString()).join("–");
+const percentage = (numbers: [number, number]) =>
+  numbers.map((n) => (n < 0.1 ? "<0.1" : n.toFixed(1))).join("–") + "%";
+const statusNames = {
+  active: "진행 중",
+  grouped: "묶음",
+  archived: "보관",
+  trashed: "휴지통",
+};
+type Pending = {
+  text: string;
+  selected: Tier;
+  proposal: Proposal | null;
+  decision: "grouped" | "archived" | "trashed" | "continue" | null;
+  result: Estimate;
+};
 function App() {
-  const [chats, setChats] = useState<Chat[]>(readSaved);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [workspace, setWorkspace] = useState(readSaved);
+  const [legacyId, setLegacyId] = useState<string | null>(
+    () => readSaved().legacyChats[0]?.id ?? null,
+  );
   const [draft, setDraft] = useState("");
-  const [tier, setTier] = useState<Tier>("standard");
+  const [pending, setPending] = useState<Pending | null>(null);
   const [sidebar, setSidebar] = useState(true);
   const [usageOpen, setUsageOpen] = useState(true);
   const [dialog, setDialog] = useState<"search" | "settings" | null>(null);
   const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<"current" | "archived" | "trashed">(
+    "current",
+  );
   const [theme, setTheme] = useState("light");
-  const [saveHistory, setSaveHistory] = useState(() => readSaved().length > 0);
   const [storageError, setStorageError] = useState(false);
-  const [sample, setSample] = useState(true);
-  const [now, setNow] = useState(Date.now());
-  const [sampleStart] = useState(Date.now());
+  const [notice, setNotice] = useState("");
   const input = useRef<HTMLTextAreaElement>(null);
   const end = useRef<HTMLDivElement>(null);
-  const active = chats.find((c) => c.id === activeId);
-  const windows: UsageWindow[] = [
-    {
-      id: "session",
-      label: "5시간 한도",
-      usedPercent: sample ? 28 : null,
-      resetsAt: sample ? sampleStart + (2 * 60 + 34) * 60000 : null,
-    },
-    {
-      id: "week",
-      label: "주간 한도",
-      usedPercent: sample ? 59 : null,
-      resetsAt: sample ? sampleStart + (3 * 24 + 8) * 3600000 : null,
-    },
-  ];
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 30000);
-    return () => clearInterval(timer);
-  }, []);
+  const auto = workspace.mode === "auto";
+  const legacyChat = workspace.legacyChats.find((c) => c.id === legacyId);
+  const visible = workspace.bundles.filter((b) =>
+    filter === "current"
+      ? b.status === "active" || b.status === "grouped"
+      : b.status === filter,
+  );
+  const messages = auto
+    ? visible.flatMap((b) => b.messages)
+    : (legacyChat?.messages ?? []);
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
   useEffect(() => {
     try {
-      if (saveHistory) localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
-      else localStorage.removeItem(STORAGE_KEY);
+      if (workspace.save)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
+      else {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(LEGACY_KEY);
+      }
       setStorageError(false);
     } catch {
       setStorageError(true);
     }
-  }, [chats, saveHistory]);
+  }, [workspace]);
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
-  }, [active?.messages.length]);
+  }, [messages.length]);
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setDialog(null);
+    const listener = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDialog(null);
+        setPending(null);
+      }
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setDialog("search");
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === "n") {
-        e.preventDefault();
-        newChat();
-      }
     };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
   }, []);
   useEffect(() => {
-    if (!dialog) return;
+    if (!dialog && !pending) return;
     const previous = document.activeElement as HTMLElement | null;
     const modal = document.querySelector<HTMLElement>('[role="dialog"]');
-    modal?.querySelector<HTMLElement>("input, button")?.focus();
+    modal?.querySelector<HTMLElement>("input,select,button")?.focus();
     const trap = (e: KeyboardEvent) => {
       if (e.key !== "Tab" || !modal) return;
       const controls = [
-        ...modal.querySelectorAll<HTMLElement>("button,input,select"),
+        ...modal.querySelectorAll<HTMLElement>(
+          "button:not(:disabled),input,select",
+        ),
       ];
       const first = controls[0],
         last = controls.at(-1);
@@ -152,54 +156,157 @@ function App() {
       document.removeEventListener("keydown", trap);
       previous?.focus();
     };
-  }, [dialog]);
-  function newChat() {
-    setActiveId(null);
-    setDraft("");
-    setDialog(null);
-    input.current?.focus();
+  }, [dialog, !!pending]);
+  function context(decision: Pending["decision"] = null) {
+    return auto
+      ? activeContext(
+          decision && decision !== "continue"
+            ? workspace.bundles.filter(
+                (b) => b.id !== pending?.proposal?.bundleId,
+              )
+            : workspace.bundles,
+        )
+      : (legacyChat?.messages ?? []);
   }
-  function openChat(chat: Chat) {
-    setActiveId(chat.id);
-    setTier(chat.tier);
-    setDraft("");
-    setDialog(null);
-  }
-  function send() {
+  function review() {
     const text = draft.trim();
-    if (!text) return;
-    const messages = [
-      { id: crypto.randomUUID(), role: "user" as const, text },
+    if (!text || pending) return;
+    const suggestion = auto ? propose(workspace.bundles, text) : null;
+    const result = estimate(text, context(), workspace.budget);
+    setPending({
+      text,
+      selected: result.tier,
+      proposal: suggestion,
+      decision: suggestion ? null : "continue",
+      result,
+    });
+  }
+  function chooseDecision(decision: Pending["decision"]) {
+    if (!pending) return;
+    setPending({
+      ...pending,
+      decision,
+      result: estimate(
+        pending.text,
+        context(decision),
+        workspace.budget,
+        pending.selected,
+      ),
+    });
+  }
+  function proceed() {
+    if (!pending || !pending.decision) return;
+    const p = pending;
+    const next = [
+      { id: crypto.randomUUID(), role: "user" as const, text: p.text },
       {
         id: crypto.randomUUID(),
         role: "assistant" as const,
-        text: makePreview(text),
+        text: makePreview(p.text, p.selected),
       },
     ];
-    if (active)
-      setChats((prev) =>
-        prev.map((c) =>
-          c.id === active.id
-            ? { ...c, messages: [...c.messages, ...messages], tier }
-            : c,
-        ),
-      );
-    else {
-      const chat: Chat = {
-        id: crypto.randomUUID(),
-        title: text.slice(0, 38),
-        messages,
-        tier,
+    const newId = crypto.randomUUID();
+    setWorkspace((w) => {
+      if (w.mode === "legacy") {
+        const found = w.legacyChats.some((c) => c.id === legacyId);
+        return {
+          ...w,
+          legacyChats: found
+            ? w.legacyChats.map((c) =>
+                c.id === legacyId
+                  ? {
+                      ...c,
+                      messages: [...c.messages, ...next],
+                      tier: p.selected,
+                    }
+                  : c,
+              )
+            : [
+                ...w.legacyChats,
+                {
+                  id: newId,
+                  title: p.text.slice(0, 38),
+                  messages: next,
+                  tier: p.selected,
+                },
+              ],
+        };
+      }
+      const organized =
+        p.proposal && p.decision !== "continue"
+          ? organize(
+              w.bundles,
+              p.proposal.bundleId,
+              p.decision as "grouped" | "archived" | "trashed",
+            )
+          : w.bundles;
+      const current = organized.findLast((b) => b.status === "active");
+      return {
+        ...w,
+        bundles: current
+          ? organized.map((b) =>
+              b.id === current.id
+                ? { ...b, messages: [...b.messages, ...next], tier: p.selected }
+                : b,
+            )
+          : [
+              ...organized,
+              {
+                id: newId,
+                title: p.text.slice(0, 38),
+                messages: next,
+                tier: p.selected,
+                status: "active",
+              },
+            ],
       };
-      setChats((prev) => [chat, ...prev]);
-      setActiveId(chat.id);
-    }
+    });
+    if (!auto && !legacyChat) setLegacyId(newId);
+    if (p.proposal && p.decision !== "continue")
+      setNotice(
+        p.decision === "trashed"
+          ? "이전 작업을 휴지통으로 옮겼습니다. 복원할 수 있습니다."
+          : "이전 작업을 정리했습니다. 대화 흐름은 계속 이어집니다.",
+      );
+    setFilter("current");
     setDraft("");
+    setPending(null);
     input.current?.focus();
   }
-  const minRemaining = sample
-    ? Math.min(...windows.map((w) => remainingPercent(w.usedPercent)!))
+  function switchMode(mode: Workspace["mode"]) {
+    setWorkspace((w) => ({ ...w, mode }));
+    setPending(null);
+    setFilter("current");
+    setNotice(
+      mode === "legacy"
+        ? "레거시 모드: 직접 세션을 관리합니다. 자동 정리는 꺼집니다."
+        : "자동 정리 모드: 하나의 대화 흐름을 이어갑니다.",
+    );
+  }
+  function jump(id: string) {
+    setFilter("current");
+    setDialog(null);
+    requestAnimationFrame(() =>
+      document
+        .getElementById(`bundle-${id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "start" }),
+    );
+  }
+  function restore(id: string) {
+    setWorkspace((w) => ({
+      ...w,
+      bundles: w.bundles.map((b) =>
+        b.id === id ? { ...b, status: "grouped" } : b,
+      ),
+    }));
+    setNotice(
+      "작업 묶음을 복원했습니다. 새 요청의 문맥에는 자동 포함하지 않습니다.",
+    );
+  }
+  const preview = draft.trim()
+    ? estimate(draft, context(), workspace.budget)
     : null;
+  const sideItems: Chat[] = auto ? visible : workspace.legacyChats;
   return (
     <div
       className={`app ${sidebar ? "" : "sidebar-closed"} ${usageOpen ? "" : "usage-closed"}`}
@@ -213,7 +320,6 @@ function App() {
           <strong>Aurora</strong>
           <button
             className="icon-button"
-            title="사이드바 접기"
             aria-label="사이드바 접기"
             onClick={() => setSidebar(false)}
           >
@@ -221,76 +327,108 @@ function App() {
           </button>
         </div>
         <nav className="primary-nav">
+          {auto ? (
+            <button
+              className="nav-item selected"
+              onClick={() => {
+                setFilter("current");
+                input.current?.focus();
+              }}
+            >
+              <Sparkles size={17} />
+              <span>하나의 대화</span>
+              <span className="sample-tag">AUTO</span>
+            </button>
+          ) : (
+            <button
+              className="nav-item selected"
+              onClick={() => {
+                setLegacyId(null);
+                setDraft("");
+              }}
+            >
+              <Plus size={17} />
+              <span>새 세션</span>
+            </button>
+          )}
           <button
-            className={!active ? "nav-item selected" : "nav-item"}
-            onClick={newChat}
+            className="nav-item"
+            aria-label="대화 검색"
+            onClick={() => setDialog("search")}
           >
-            <Plus size={18} />
-            <span>새 대화</span>
-            <kbd>⌘ N</kbd>
-          </button>
-          <button className="nav-item" onClick={() => setDialog("search")}>
             <Search size={17} />
             <span>대화 검색</span>
             <kbd>⌘ K</kbd>
           </button>
         </nav>
-        <div className="section-label">워크스페이스</div>
-        <div className="workspace-row">
-          <Folder size={16} />
-          <span>Aurora</span>
-          <span className="local-dot" title="로컬 워크스페이스" />
+        <div className="section-label">
+          <span>{auto ? "정리된 작업" : "직접 관리하는 세션"}</span>
+          <span>{sideItems.length}</span>
         </div>
-        <div className="section-label chat-label">
-          <span>대화</span>
-          <span>{chats.length}</span>
-        </div>
-        <div className="chat-list">
-          {chats.length === 0 ? (
-            <div className="empty-history">
-              생각의 시작을 여기에.
-              <br />
-              <span>새 대화가 이곳에 모입니다.</span>
-            </div>
-          ) : (
-            chats.map((chat) => (
+        {auto && (
+          <div className="filter-tabs" aria-label="작업 상태">
+            {(["current", "archived", "trashed"] as const).map((f) => (
               <button
-                key={chat.id}
-                className={`chat-item ${activeId === chat.id ? "active" : ""}`}
-                onClick={() => openChat(chat)}
+                key={f}
+                className={filter === f ? "active" : ""}
+                onClick={() => setFilter(f)}
               >
-                <MessageSquare size={14} />
-                <span>{chat.title}</span>
+                {f === "current"
+                  ? "작업"
+                  : f === "archived"
+                    ? "보관"
+                    : "휴지통"}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="chat-list">
+          {sideItems.length ? (
+            sideItems.map((c) => (
+              <button
+                key={c.id}
+                className={`chat-item ${!auto && legacyId === c.id ? "active" : ""}`}
+                onClick={() =>
+                  auto
+                    ? filter === "current"
+                      ? jump(c.id)
+                      : document
+                          .getElementById(`bundle-${c.id}`)
+                          ?.scrollIntoView({ behavior: "smooth" })
+                    : (setLegacyId(c.id), setDraft(""))
+                }
+              >
+                {auto ? <Layers size={14} /> : <MessageSquare size={14} />}
+                <span>{c.title}</span>
               </button>
             ))
+          ) : (
+            <div className="empty-history">
+              {auto ? "대화는 하나로 이어집니다." : "아직 세션이 없습니다."}
+              <br />
+              <span>
+                {auto
+                  ? "정리가 필요할 때 제안할게요."
+                  : "새 세션에서 시작하세요."}
+              </span>
+            </div>
           )}
         </div>
         <div className="sidebar-bottom">
-          <button
-            className="mini-usage"
-            onClick={() => setUsageOpen((v) => !v)}
-            aria-label="사용량 패널 전환"
-          >
-            <div>
-              <Activity size={15} />
-              <span>남은 사용량</span>
-              <span className="sample-tag">{sample ? "샘플" : "미연결"}</span>
-            </div>
-            <div className="mini-meter">
-              <span style={{ width: `${minRemaining ?? 0}%` }} />
-            </div>
-            <small>
-              {sample
-                ? `가장 적게 남은 한도 ${minRemaining}%`
-                : "계정 연결 전입니다"}
-              <ChevronRight size={13} />
-            </small>
-          </button>
+          <div className="mode-note">
+            <Sparkles size={14} />
+            <span>
+              {auto ? "정리 제안 켜짐" : "자동 정리 꺼짐"}
+              <small>
+                {auto ? "현재 로컬 규칙 기반" : "세션을 직접 관리합니다"}
+              </small>
+            </span>
+          </div>
           <button className="account" onClick={() => setDialog("settings")}>
             <span className="avatar">A</span>
             <span>
-              <strong>로컬 워크스페이스</strong>
-              <small>계정 미연결</small>
+              <strong>{auto ? "자동 정리 모드" : "레거시 모드"}</strong>
+              <small>모드 및 데이터 설정</small>
             </span>
             <Settings2 size={16} />
           </button>
@@ -310,7 +448,9 @@ function App() {
             )}
             <span>Aurora</span>
             <ChevronRight size={13} />
-            <strong>{active?.title ?? "새 대화"}</strong>
+            <strong>
+              {auto ? "하나의 대화" : (legacyChat?.title ?? "새 세션")}
+            </strong>
           </div>
           <div className="top-actions">
             <span className="preview-badge">
@@ -318,75 +458,128 @@ function App() {
               로컬 미리보기
             </span>
             <button
-              className={`icon-button ${usageOpen ? "pressed" : ""}`}
+              className="icon-button"
               aria-label="사용량 패널 전환"
-              title="사용량"
               onClick={() => setUsageOpen((v) => !v)}
             >
               <PanelRight size={17} />
             </button>
           </div>
         </header>
+        {notice && (
+          <div className="inline-notice" role="status">
+            {notice}
+            <button aria-label="알림 닫기" onClick={() => setNotice("")}>
+              <X size={13} />
+            </button>
+          </div>
+        )}
         <div className="conversation">
-          {!active ? (
+          {!messages.length ? (
             <section className="welcome">
               <div className="welcome-symbol">
                 <Sparkles size={27} strokeWidth={1.25} />
               </div>
-              <div className="eyebrow">A LITTLE CLARITY, A BETTER START</div>
-              <h1>무엇부터 시작할까요?</h1>
-              <p>익숙한 작업 공간에서, 필요한 만큼의 AI로.</p>
+              <div className="eyebrow">ONE FLOW. LESS FRICTION.</div>
+              <h1>
+                {auto && filter === "current"
+                  ? "대화는 하나로, 생각은 자유롭게."
+                  : auto
+                    ? `${filter === "archived" ? "보관한" : "휴지통의"} 작업이 없습니다.`
+                    : "무엇부터 시작할까요?"}
+              </h1>
+              <p>
+                {auto
+                  ? "세션을 나누지 않아도 괜찮아요. 정리가 필요할 때 제안할게요."
+                  : "세션을 직접 나누고 관리하는 익숙한 작업 공간입니다."}
+              </p>
               <div className="prompt-grid">
-                {prompts.map((p) => (
+                {[
+                  ["글을 간결하게 요약해 줘", "가볍게 정리하기", "요약 · 번역"],
+                  [
+                    "코드의 문제를 찾아 해결 방법을 제안해 줘",
+                    "함께 문제 풀기",
+                    "코드 · 분석",
+                  ],
+                  [
+                    "동기화 아키텍처를 설계해 줘",
+                    "깊이 생각하기",
+                    "설계 · 추론",
+                  ],
+                ].map(([text, title, note]) => (
                   <button
-                    key={p.title}
+                    key={title}
                     className="prompt-card"
                     onClick={() => {
-                      setDraft(p.text);
+                      setDraft(text);
+                      setFilter("current");
                       input.current?.focus();
                     }}
                   >
-                    <p.icon size={18} strokeWidth={1.5} />
+                    <Sparkles size={17} />
                     <strong>
-                      {p.title}
+                      {title}
                       <ArrowUpRight size={14} />
                     </strong>
-                    <span>{p.note}</span>
+                    <span>{note}</span>
                   </button>
                 ))}
               </div>
               <div className="welcome-note">
-                <span className="tiny-spark">✧</span> 좋은 결과에 필요한 모델을
-                함께 찾아갑니다.
+                전송 전에 추천 모델과 예상 소모량을 확인하세요.
               </div>
             </section>
           ) : (
             <section className="messages" aria-label="대화 내용">
-              {active.messages.map((message) => (
-                <article key={message.id} className={`message ${message.role}`}>
-                  <div className="message-author">
-                    {message.role === "assistant" ? (
-                      <>
-                        <span className="assistant-symbol">✦</span> Aurora{" "}
-                        <span className="sample-tag">로컬 추천</span>
-                      </>
-                    ) : (
-                      "나"
-                    )}
-                  </div>
-                  <div className="message-text">{message.text}</div>
-                </article>
-              ))}
+              {auto
+                ? visible.map((b) => (
+                    <section
+                      className="bundle"
+                      id={`bundle-${b.id}`}
+                      key={b.id}
+                    >
+                      <div className="bundle-heading">
+                        <Layers size={14} />
+                        <strong>{b.title}</strong>
+                        <span className="sample-tag">
+                          {statusNames[b.status]}
+                        </span>
+                        {(b.status === "archived" ||
+                          b.status === "trashed") && (
+                          <button onClick={() => restore(b.id)}>
+                            <Undo2 size={13} />
+                            복원
+                          </button>
+                        )}
+                      </div>
+                      {b.messages.map((m) => (
+                        <MessageView key={m.id} message={m} />
+                      ))}
+                    </section>
+                  ))
+                : messages.map((m) => <MessageView key={m.id} message={m} />)}
               <div ref={end} />
             </section>
           )}
         </div>
         <div className="composer-area">
+          {preview && (
+            <div className="draft-estimate" aria-live="polite">
+              <Sparkles size={13} />
+              <span>{tierNames[preview.tier]} 추천</span>
+              <span>약 {range(preview.total)} 토큰</span>
+              <span>
+                {preview.percent
+                  ? `설정 예산 ${percentage(preview.percent)}`
+                  : "계정 한도 % 추정 불가"}
+              </span>
+            </div>
+          )}
           <div className="composer">
             <textarea
               ref={input}
               aria-label="메시지"
-              placeholder="무엇이든 물어보세요. 함께 시작해 봐요."
+              placeholder="계속 이야기하세요. 정리는 함께 할게요."
               maxLength={20000}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -397,33 +590,22 @@ function App() {
                   !e.nativeEvent.isComposing
                 ) {
                   e.preventDefault();
-                  send();
+                  review();
                 }
               }}
             />
             <div className="composer-toolbar">
               <div className="model-control">
                 <Sparkles size={14} />
-                <select
-                  aria-label="모델 등급"
-                  value={tier}
-                  onChange={(e) => setTier(e.target.value as Tier)}
-                >
-                  {Object.entries(tierNames).map(([value, name]) => (
-                    <option value={value} key={value}>
-                      {name} 모델
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={12} />
+                <span>요청별 모델 추천</span>
                 <span className="toolbar-divider" />
-                <span>직접 선택</span>
+                <span>실행 전 확인</span>
               </div>
               <button
                 className="send-button"
-                aria-label="메시지 보내기"
+                aria-label="요청 검토"
                 disabled={!draft.trim()}
-                onClick={send}
+                onClick={review}
               >
                 <ArrowUp size={19} />
               </button>
@@ -432,19 +614,17 @@ function App() {
           <div className="composer-footnote">
             <span>
               <span className="status-dot" />
-              외부 전송 없음 · 로컬 추천만 동작
+              외부 전송 없음 · 로컬 미리보기
             </span>
-            <span>Enter 전송 · Shift + Enter 줄바꿈</span>
+            <span>Enter 검토 · Shift + Enter 줄바꿈</span>
           </div>
         </div>
         <footer className="statusbar">
           <span>
             <span className="status-dot" />
-            Aurora · Desktop Preview
+            {auto ? "하나의 대화 · 자동 정리" : "레거시 · 직접 세션 관리"}
           </span>
-          <span>
-            {saveHistory ? "이 기기에 대화 저장 중" : "대화 저장 꺼짐"}
-          </span>
+          <span>{workspace.save ? "이 기기에 저장 중" : "대화 저장 꺼짐"}</span>
         </footer>
       </main>
       {usageOpen && (
@@ -452,7 +632,7 @@ function App() {
           <div className="usage-heading">
             <span>
               <Activity size={16} />
-              사용량
+              모델과 사용량
             </span>
             <button
               className="icon-button"
@@ -464,77 +644,70 @@ function App() {
           </div>
           <div className="usage-scroll">
             <div className="usage-intro">
-              <div className="eyebrow">ROOM TO THINK</div>
+              <div className="eyebrow">THE RIGHT MODEL. ENOUGH ROOM.</div>
               <h2>
-                얼마나 더<br />할 수 있을까요?
+                시작하기 전에,
+                <br />
+                얼마나 쓸까요?
               </h2>
               <p>
-                남은 한도를 미리 확인하고
+                요청과 현재 문맥을 기준으로
                 <br />
-                다음 작업을 이어가세요.
+                모델 등급과 토큰 범위를 제안합니다.
               </p>
             </div>
             <div className="data-source">
               <span className="source-dot" />
-              <span>{sample ? "샘플 데이터" : "계정 미연결"}</span>
-              <button onClick={() => setSample((v) => !v)}>
-                {sample ? "샘플 끄기" : "샘플 보기"}
-              </button>
+              계정 미연결 · 모델 등급 기준
             </div>
-            {windows.map((window, index) => {
-              const remaining = remainingPercent(window.usedPercent);
-              return (
-                <section
-                  className={`usage-card ${index ? "weekly" : ""}`}
-                  key={window.id}
-                >
-                  <div className="usage-card-title">
-                    <span>{window.label}</span>
-                    <span>{index ? "WEEKLY" : "SESSION"}</span>
-                  </div>
-                  <div className="usage-number">
-                    {remaining === null ? "—" : remaining}
-                    <span>{remaining === null ? "" : "%"}</span>
-                    <small>{remaining === null ? "확인 전" : "남음"}</small>
-                  </div>
-                  <div
-                    className="usage-meter"
-                    role="progressbar"
-                    aria-label={`${window.label} 남은 비율`}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={remaining ?? undefined}
-                    aria-valuetext={
-                      remaining === null ? "데이터 없음" : `${remaining}% 남음`
-                    }
-                  >
-                    <span style={{ width: `${remaining ?? 0}%` }} />
-                  </div>
-                  <div className="usage-meta">
-                    <span>{resetText(window.resetsAt, now)}</span>
-                    {remaining !== null && <span>{100 - remaining}% 사용</span>}
-                  </div>
-                </section>
-              );
-            })}
+            <section className="usage-card">
+              <div className="usage-card-title">
+                <span>실제 계정 잔여 한도</span>
+                <span>ACCOUNT</span>
+              </div>
+              <div className="usage-number">
+                —<small>연결 전</small>
+              </div>
+              <p className="small-copy">
+                확인되지 않은 잔여량은 표시하지 않습니다.
+              </p>
+            </section>
+            <section className="usage-card">
+              <div className="usage-card-title">
+                <span>이번 요청 예상</span>
+                <span>ESTIMATE</span>
+              </div>
+              <div className="estimate-total">
+                {preview ? range(preview.total) : "—"}
+                <small>토큰 · 입력 + 출력</small>
+              </div>
+              <div className="budget-value">
+                {preview?.percent
+                  ? percentage(preview.percent)
+                  : "퍼센트 추정 불가"}
+              </div>
+              <p className="small-copy">
+                {workspace.budget
+                  ? "직접 설정한 토큰 예산 대비 비율입니다. 계정 한도가 아닙니다."
+                  : "토큰 예산을 설정하면 예산 대비 비율을 볼 수 있습니다."}
+              </p>
+            </section>
             <div className="usage-explanation">
               <CircleHelp size={15} />
               <p>
-                {sample
-                  ? "화면 확인용 예시입니다. 실제 계정의 잔여량이나 사용 가능 횟수를 나타내지 않습니다."
-                  : "사용량 데이터가 연결되지 않았습니다. 확인되지 않은 한도는 숫자로 표시하지 않습니다."}
+                문자 수와 모델 등급별 출력 가정으로 계산한 범위입니다. 추론·도구
+                호출·재시도 비용은 포함하지 않습니다.
               </p>
             </div>
             <div className="next-section">
-              <div className="next-icon">
-                <Zap size={17} />
-              </div>
               <div>
-                <strong>충분한 모델, 더 오래.</strong>
+                <strong>문맥도 필요한 만큼만.</strong>
                 <p>
-                  작업에 알맞은 모델을 고르면
+                  묶거나 보관한 작업은 다음 요청의
                   <br />
-                  고성능 모델은 필요할 때 쓸 수 있어요.
+                  예상 문맥에서 제외합니다.
+                  <br />
+                  현재 문맥 {context().length}개 메시지
                 </p>
               </div>
             </div>
@@ -543,79 +716,221 @@ function App() {
               onClick={() => setDialog("settings")}
             >
               <Settings2 size={14} />
-              사용량 및 데이터 설정
+              모드 및 예산 설정
               <ChevronRight size={14} />
             </button>
           </div>
           <div className="panel-footer">
             <span className="status-dot" />
-            실제 사용량 연동 준비 중
+            실제 모델 연결 준비 중
           </div>
         </aside>
       )}
-      {dialog && (
+      {(dialog || pending) && (
         <div
           className="modal-backdrop"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) setDialog(null);
+            if (e.target === e.currentTarget) {
+              setDialog(null);
+              setPending(null);
+            }
           }}
         >
           <section
-            className="modal"
+            className={`modal ${pending ? "review-modal" : ""}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="dialog-title"
           >
             <header>
               <h2 id="dialog-title">
-                {dialog === "search" ? "대화 검색" : "워크스페이스 설정"}
+                {pending
+                  ? "실행 전에 확인해 주세요"
+                  : dialog === "search"
+                    ? "대화 검색"
+                    : "워크스페이스 설정"}
               </h2>
               <button
                 className="icon-button"
                 aria-label="닫기"
-                onClick={() => setDialog(null)}
+                onClick={() => {
+                  setDialog(null);
+                  setPending(null);
+                }}
               >
                 <X size={18} />
               </button>
             </header>
-            {dialog === "search" ? (
+            {pending ? (
+              <>
+                <div className="request-summary">{pending.text}</div>
+                {pending.proposal && (
+                  <section className="organize-proposal">
+                    <div className="proposal-label">
+                      <Sparkles size={15} />
+                      정리 제안 <span className="sample-tag">로컬 규칙</span>
+                    </div>
+                    <strong>{pending.proposal.reason}</strong>
+                    <p>이전 작업을 묶을까요, 버릴까요, 보관할까요?</p>
+                    <div className="decision-grid">
+                      {(
+                        [
+                          ["grouped", "묶기", Layers],
+                          ["trashed", "버리기", Trash2],
+                          ["archived", "보관하기", Archive],
+                          ["continue", "계속 이어가기", MessageSquare],
+                        ] as const
+                      ).map(([action, label, Icon]) => (
+                        <button
+                          key={action}
+                          aria-pressed={pending.decision === action}
+                          onClick={() => chooseDecision(action)}
+                        >
+                          <Icon size={15} />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <small>
+                      버리기는 휴지통 이동입니다. 모든 선택은 아래 진행 버튼을
+                      눌러야 적용됩니다.
+                    </small>
+                  </section>
+                )}
+                <div className="recommendation-title">
+                  <Sparkles size={17} />
+                  <strong>{tierNames[pending.result.tier]} 모델 추천</strong>
+                </div>
+                <p className="review-reason">{pending.result.reason}</p>
+                <label className="review-model">
+                  이번 요청의 모델 등급
+                  <select
+                    aria-label="이번 요청 모델"
+                    value={pending.selected}
+                    onChange={(e) => {
+                      const selected = e.target.value as Tier;
+                      setPending({
+                        ...pending,
+                        selected,
+                        result: estimate(
+                          pending.text,
+                          context(pending.decision),
+                          workspace.budget,
+                          selected,
+                        ),
+                      });
+                    }}
+                  >
+                    {Object.entries(tierNames).map(([key, name]) => (
+                      <option key={key} value={key}>
+                        {name} 모델
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <div className="estimate-breakdown">
+                  <div>
+                    <span>입력 · 문맥 포함</span>
+                    <strong>약 {pending.result.input.toLocaleString()}</strong>
+                  </div>
+                  <div>
+                    <span>예상 출력</span>
+                    <strong>{range(pending.result.output)}</strong>
+                  </div>
+                  <div>
+                    <span>합계 토큰</span>
+                    <strong>{range(pending.result.total)}</strong>
+                  </div>
+                  <div>
+                    <span>직접 설정 예산 대비</span>
+                    <strong>
+                      {pending.result.percent
+                        ? percentage(pending.result.percent)
+                        : "추정 불가"}
+                    </strong>
+                  </div>
+                </div>
+                <p className="small-copy">
+                  실제 계정 한도 대비 %는 추정할 수 없습니다. 모델 연동 전에는
+                  모델명 대신 등급을 제안합니다. 출력량은 가정이며 품질·비용을
+                  보장하지 않습니다.
+                </p>
+                <div className="review-actions">
+                  <button onClick={() => setPending(null)}>다시 작성</button>
+                  <button
+                    className="primary-action"
+                    disabled={!pending.decision}
+                    onClick={proceed}
+                  >
+                    이 모델로 미리보기
+                  </button>
+                </div>
+              </>
+            ) : dialog === "search" ? (
               <>
                 <div className="search-input">
                   <Search size={18} />
                   <input
                     aria-label="대화 검색어"
-                    placeholder="제목이나 메시지로 검색"
+                    placeholder="작업 제목이나 메시지로 검색"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
                 </div>
                 <div className="search-results">
-                  {chats
+                  {(auto
+                    ? workspace.bundles.filter(
+                        (b) => b.status === "active" || b.status === "grouped",
+                      )
+                    : workspace.legacyChats
+                  )
                     .filter((c) =>
                       `${c.title} ${c.messages.map((m) => m.text).join(" ")}`
                         .toLowerCase()
                         .includes(search.toLowerCase()),
                     )
                     .map((c) => (
-                      <button key={c.id} onClick={() => openChat(c)}>
-                        <MessageSquare size={16} />
+                      <button
+                        key={c.id}
+                        onClick={() => {
+                          if (auto) jump(c.id);
+                          else {
+                            setLegacyId(c.id);
+                            setDialog(null);
+                          }
+                        }}
+                      >
+                        <MessageSquare size={15} />
                         <span>{c.title}</span>
                         <ChevronRight size={14} />
                       </button>
                     ))}
-                  {!chats.some((c) =>
-                    `${c.title} ${c.messages.map((m) => m.text).join(" ")}`
-                      .toLowerCase()
-                      .includes(search.toLowerCase()),
-                  ) && <p>일치하는 대화가 없습니다.</p>}
                 </div>
               </>
             ) : (
               <>
                 <label className="setting-row">
                   <span>
+                    <strong>대화 관리 모드</strong>
+                    <small>
+                      모드별 대화는 각각 유지됩니다. 전환해도 삭제되지 않습니다.
+                    </small>
+                  </span>
+                  <select
+                    aria-label="대화 관리 모드"
+                    value={workspace.mode}
+                    onChange={(e) =>
+                      switchMode(e.target.value as Workspace["mode"])
+                    }
+                  >
+                    <option value="auto">자동 정리</option>
+                    <option value="legacy">레거시</option>
+                  </select>
+                </label>
+                <label className="setting-row">
+                  <span>
                     <strong>화면 테마</strong>
-                    <small>작업 공간의 밝기를 선택하세요.</small>
+                    <small>현재 창에 적용합니다.</small>
                   </span>
                   <select
                     aria-label="화면 테마"
@@ -630,34 +945,48 @@ function App() {
                   <span>
                     <strong>이 기기에 대화 저장</strong>
                     <small>
-                      끄면 저장된 사본을 지웁니다. 현재 창의 대화는 유지됩니다.
+                      끄면 저장 사본을 지웁니다. 현재 창의 대화는 유지됩니다.
                     </small>
                   </span>
                   <input
                     type="checkbox"
-                    checked={saveHistory}
-                    onChange={(e) => setSaveHistory(e.target.checked)}
+                    checked={workspace.save}
+                    onChange={(e) =>
+                      setWorkspace((w) => ({ ...w, save: e.target.checked }))
+                    }
                   />
                 </label>
                 <label className="setting-row">
                   <span>
-                    <strong>사용량 샘플 표시</strong>
+                    <strong>계획용 토큰 예산</strong>
                     <small>
-                      실제 계정 정보가 아닌 화면 확인용 데이터입니다.
+                      예: 100000. 계정 한도와 무관한 개인 예산입니다.
                     </small>
                   </span>
                   <input
-                    type="checkbox"
-                    checked={sample}
-                    onChange={(e) => setSample(e.target.checked)}
+                    aria-label="계획용 토큰 예산"
+                    className="budget-input"
+                    type="number"
+                    min="1"
+                    max="1000000000"
+                    placeholder="미설정"
+                    value={workspace.budget ?? ""}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      setWorkspace((w) => ({
+                        ...w,
+                        budget:
+                          Number.isFinite(n) && n > 0 ? Math.min(n, 1e9) : null,
+                      }));
+                    }}
                   />
                 </label>
                 <div className="connection-info">
                   <Check size={16} />
                   <span>
-                    현재 외부로 전송되는 데이터는 없습니다.
+                    추천·정리는 현재 로컬 규칙으로 동작합니다.
                     <br />
-                    계정 연결과 실제 AI 응답은 아직 제공하지 않습니다.
+                    AI 판단과 실제 모델 응답·사용량 연동은 준비 중입니다.
                   </span>
                 </div>
               </>
@@ -667,13 +996,29 @@ function App() {
       )}
       {storageError && (
         <div className="toast" role="alert">
-          대화를 저장하지 못했습니다. 현재 창을 닫기 전에 내용을 복사해 주세요.
+          저장하지 못했습니다. 창을 닫기 전에 내용을 복사해 주세요.
         </div>
       )}
     </div>
   );
 }
-
+function MessageView({ message }: { message: Chat["messages"][number] }) {
+  return (
+    <article className={`message ${message.role}`}>
+      <div className="message-author">
+        {message.role === "assistant" ? (
+          <>
+            <span className="assistant-symbol">✦</span>Aurora
+            <span className="sample-tag">로컬 미리보기</span>
+          </>
+        ) : (
+          "나"
+        )}
+      </div>
+      <div className="message-text">{message.text}</div>
+    </article>
+  );
+}
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
