@@ -1,9 +1,8 @@
 import { _electron as electron, expect } from "@playwright/test";
 import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
-if (!process.env.TMPDIR?.startsWith("/Volumes/DevBuild/"))
-  throw new Error("Use ./dev npm run test:desktop");
-const profile = await mkdtemp(path.join(process.env.TMPDIR, "aurora-qa-"));
+import { tmpdir } from "node:os";
+const profile = await mkdtemp(path.join(tmpdir(), "aurora-qa-"));
 await mkdir("artifacts", { recursive: true });
 const errors = [];
 let app;
@@ -183,5 +182,5 @@ try {
   );
 } finally {
   await app?.close();
-  console.log(`QA profile retained on SSD: ${profile}`);
+  console.log(`QA profile retained: ${profile}`);
 }

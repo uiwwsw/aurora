@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Aurora desktop workspace prototype",
+  "description": "Aurora — one conversation, assisted organization, and model routing previews.",
   "main": "electron/main.cjs",
   "scripts": {
     "build": "tsc --noEmit && vite build",
@@ -27,5 +27,17 @@
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
-  }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uiwwsw/aurora.git"
+  },
+  "bugs": {
+    "url": "https://github.com/uiwwsw/aurora/issues"
+  },
+  "homepage": "https://github.com/uiwwsw/aurora#readme"
 }
