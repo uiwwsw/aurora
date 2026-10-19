@@ -1,0 +1,42 @@
+# Aurora 데스크톱 초기 방향
+
+2026-10-19. 사용자 요구: macOS와 Windows에 출시할 컴퓨터 프로그램.
+원본 `readme`는 Chrome 확장 프로그램 기획으로 보존한다. 이 문서는 데스크톱 방향의 초기 제안이다. 이후 Electron 기반 로컬 UI 프로토타입을 구현했다.
+
+## 기술 제안
+
+Electron + React + TypeScript, 프런트엔드 개발 도구는 Vite.
+TypeScript로 추천 로직과 UI를 작성하고 Mac·Windows 앱에서 공유한다.
+Electron은 Chromium과 Node.js를 포함하므로 배포 용량과 메모리 비용이 있다.
+Tauri는 시스템 WebView를 사용하지만 Rust 도구 체인 및 운영체제별 렌더링 검증이 추가된다.
+첫 MVP는 개발 속도와 TypeScript 중심 구조를 우선해 Electron을 제안한다.
+
+- Electron: https://www.electronjs.org/docs/latest
+- Tauri: https://github.com/tauri-apps/tauri
+
+## 첫 MVP
+
+1. 질문 입력 → 작업 유형·복잡도 분석 → 모델 등급 추천과 이유 표시.
+2. 예상 입력 토큰량 표시. 모델별 토크나이저가 없으면 추정치임을 명시한다.
+3. 모델 선택은 사용자가 결정한다. 초기에는 모델명보다 경량·표준·고성능 등급을 중심으로 설계한다.
+4. 추천은 휴리스틱으로 시작하고 품질 보장처럼 표시하지 않는다.
+5. 사용자가 선택한 모델과 만족도 기록을 로컬에 저장한다. 질문 원문 저장은 별도 선택으로 둔다.
+
+## 구조 및 후속 순서
+
+- main: 창, 파일·설정, 추후 제공자 연결. renderer의 Node 접근은 끄고 contextIsolation과 sandbox를 사용한다.
+- preload: 필요한 기능만 제한한 IPC 브리지.
+- renderer: React UI.
+- shared: 추천 엔진, 타입, 모델 카탈로그. 네트워크 호출과 분리해 단위 테스트한다.
+
+다음 구현은 앱 골격 → 오프라인 추천 흐름 → 추천 로직 검증 → macOS 패키징 → Windows 러너 패키징·실행 검증 순서다.
+공식 로그인·구독 연동은 제공자가 허용하는 인증 및 이용 범위를 확인한 뒤 별도 설계한다.
+README의 구독 연동 문구만으로 구현 가능성을 확정하지 않는다. 초기 MVP는 로그인 없이 동작한다.
+실제 모델 호출, 자동 라우팅, 업데이트 배포, 서명·공증은 후속 범위다.
+
+## 로컬 작업
+
+표준 경로: `/Users/uiwwsw/Developer/apps/aurora`.
+실제 경로: `/Volumes/무제/MacMini/Developer/apps/aurora`.
+빌드·QA 명령은 `./dev <command> [args...]`를 사용한다.
+현 단계에는 서버·호스트 포트·배포 명령이 없다. `./dev npm start`로 로컬 Electron 창을 실행한다. 실제 AI 응답·계정 사용량 연동·배포 패키지는 아직 없다.

@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "runtime": "electron-react-typescript",
+  "execution": "none",
+  "requireCleanGit": true,
+  "verify": ["./dev npm run build", "./dev npm test"],
+  "deploy": [],
+  "healthchecks": []
+}
