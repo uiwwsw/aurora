@@ -4,7 +4,13 @@ export const tierNames: Record<Tier, string> = {
   standard: "표준",
   advanced: "고성능",
 };
-export type Message = { id: string; role: "user" | "assistant"; text: string };
+export type Message = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  model?: string;
+  live?: boolean;
+};
 export type Chat = {
   id: string;
   title: string;

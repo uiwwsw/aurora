@@ -39,6 +39,17 @@ import {
   restoreWorkspace,
   tierNames,
 } from "./domain";
+import {
+  models,
+  modelById,
+  presets,
+  readRouting,
+  ROUTING_KEY,
+  type RoutingSettings,
+  type ProviderStatus,
+  type Analysis,
+  type Completion,
+} from "./routing";
 import "./style.css";
 function readSaved(): Workspace {
   try {
@@ -62,6 +73,8 @@ const statusNames = {
 };
 type Pending = {
   text: string;
+  modelId: string;
+  analysis?: Analysis;
   selected: Tier;
   proposal: Proposal | null;
   decision: "grouped" | "archived" | "trashed" | "continue" | null;
@@ -73,6 +86,33 @@ function App() {
     () => readSaved().legacyChats[0]?.id ?? null,
   );
   const [draft, setDraft] = useState("");
+  const [routing, setRouting] = useState<RoutingSettings>(() => {
+    try {
+      return readRouting(localStorage.getItem(ROUTING_KEY));
+    } catch {
+      return readRouting(null);
+    }
+  });
+  const [providerStatus, setProviderStatus] = useState<ProviderStatus>({
+    openai: false,
+    anthropic: false,
+  });
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
+  const [aiError, setAIError] = useState("");
+  useEffect(() => {
+    window.auroraAI
+      ?.status()
+      .then(setProviderStatus)
+      .catch(() => setAIError("API 키 설정 상태를 확인하지 못했습니다."));
+  }, []);
+  useEffect(() => {
+    try {
+      localStorage.setItem(ROUTING_KEY, JSON.stringify(routing));
+    } catch {
+      setAIError("모델 설정을 저장하지 못했습니다.");
+    }
+  }, [routing]);
   const [pending, setPending] = useState<Pending | null>(null);
   const [sidebar, setSidebar] = useState(true);
   const [usageOpen, setUsageOpen] = useState(true);
@@ -117,6 +157,7 @@ function App() {
   }, [messages.length]);
   useEffect(() => {
     const listener = (e: KeyboardEvent) => {
+      if (busyRef.current) return;
       if (e.key === "Escape") {
         setDialog(null);
         setPending(null);
@@ -172,10 +213,13 @@ function App() {
     const text = draft.trim();
     if (!text || pending) return;
     const suggestion = auto ? propose(workspace.bundles, text) : null;
-    const result = estimate(text, context(), workspace.budget);
+    setAIError("");
+    const initial = modelById(routing.executor);
+    const result = estimate(text, context(), workspace.budget, initial.tier);
     setPending({
       text,
-      selected: result.tier,
+      modelId: initial.id,
+      selected: initial.tier,
       proposal: suggestion,
       decision: suggestion ? null : "continue",
       result,
@@ -194,15 +238,72 @@ function App() {
       ),
     });
   }
-  function proceed() {
-    if (!pending || !pending.decision) return;
+  async function analyze() {
+    if (!pending || busyRef.current || !window.auroraAI) return;
+    busyRef.current = true;
+    setBusy(true);
+    setAIError("");
+    try {
+      const result = (await window.auroraAI.request({
+        action: "analyze",
+        model: routing.analyzer,
+        text: pending.text,
+        context: context(pending.decision),
+        maxOutputTokens: 2048,
+      })) as Analysis;
+      setPending((p) => (p ? { ...p, analysis: result } : p));
+      setNotice(
+        `내부 분석 · ${modelById(result.model).name} · 입력 ${result.inputTokens ?? "미확인"} / 출력 ${result.outputTokens ?? "미확인"} 토큰 사용`,
+      );
+    } catch (error) {
+      setAIError(
+        error instanceof Error ? error.message : "내부 분석에 실패했습니다.",
+      );
+    } finally {
+      busyRef.current = false;
+      setBusy(false);
+    }
+  }
+  async function proceed() {
+    if (!pending || !pending.decision || busyRef.current) return;
     const p = pending;
+    let completion: Completion | null = null;
+    if (routing.live) {
+      if (!window.auroraAI) {
+        setAIError("Electron 앱에서 실행해 주세요.");
+        return;
+      }
+      busyRef.current = true;
+      setBusy(true);
+      setAIError("");
+      try {
+        completion = await window.auroraAI.request({
+          action: "execute",
+          model: p.modelId,
+          text: p.text,
+          context: context(p.decision),
+          maxOutputTokens: 4096,
+        });
+      } catch (error) {
+        setAIError(
+          error instanceof Error ? error.message : "API 실행에 실패했습니다.",
+        );
+        return;
+      } finally {
+        busyRef.current = false;
+        setBusy(false);
+      }
+    }
     const next = [
       { id: crypto.randomUUID(), role: "user" as const, text: p.text },
       {
         id: crypto.randomUUID(),
         role: "assistant" as const,
-        text: makePreview(p.text, p.selected),
+        text: completion
+          ? `${completion.text}\n\n—\n${modelById(p.modelId).name} · 실제 입력 ${completion.inputTokens ?? "미확인"} / 출력 ${completion.outputTokens ?? "미확인"} 토큰${completion.incomplete ? " · 생성 상한 도달: 미완성일 수 있음" : ""}`
+          : `${makePreview(p.text, p.selected)}\n선택한 실행 모델: ${modelById(p.modelId).name}`,
+        live: !!completion,
+        model: p.modelId,
       },
     ];
     const newId = crypto.randomUUID();
@@ -304,7 +405,12 @@ function App() {
     );
   }
   const preview = draft.trim()
-    ? estimate(draft, context(), workspace.budget)
+    ? estimate(
+        draft,
+        context(),
+        workspace.budget,
+        modelById(routing.executor).tier,
+      )
     : null;
   const sideItems: Chat[] = auto ? visible : workspace.legacyChats;
   return (
@@ -455,7 +561,7 @@ function App() {
           <div className="top-actions">
             <span className="preview-badge">
               <span />
-              로컬 미리보기
+              {routing.live ? "API 모드" : "로컬 미리보기"}
             </span>
             <button
               className="icon-button"
@@ -614,7 +720,9 @@ function App() {
           <div className="composer-footnote">
             <span>
               <span className="status-dot" />
-              외부 전송 없음 · 로컬 미리보기
+              {routing.live
+                ? "선택한 제공자 API로 전송 · 사용량 발생"
+                : "외부 전송 없음 · 로컬 미리보기"}
             </span>
             <span>Enter 검토 · Shift + Enter 줄바꿈</span>
           </div>
@@ -658,7 +766,9 @@ function App() {
             </div>
             <div className="data-source">
               <span className="source-dot" />
-              계정 미연결 · 모델 등급 기준
+              {routing.live
+                ? "API 키 모드 · 잔여 한도 미연결"
+                : "미리보기 · API 호출 꺼짐"}
             </div>
             <section className="usage-card">
               <div className="usage-card-title">
@@ -722,7 +832,9 @@ function App() {
           </div>
           <div className="panel-footer">
             <span className="status-dot" />
-            실제 모델 연결 준비 중
+            {routing.live
+              ? "키 감지는 접근 검증과 다릅니다"
+              : "설정에서 내부·실행 모델 선택"}
           </div>
         </aside>
       )}
@@ -730,7 +842,7 @@ function App() {
         <div
           className="modal-backdrop"
           onMouseDown={(e) => {
-            if (e.target === e.currentTarget) {
+            if (e.target === e.currentTarget && !busyRef.current) {
               setDialog(null);
               setPending(null);
             }
@@ -753,6 +865,7 @@ function App() {
               <button
                 className="icon-button"
                 aria-label="닫기"
+                disabled={busy}
                 onClick={() => {
                   setDialog(null);
                   setPending(null);
@@ -783,6 +896,7 @@ function App() {
                       ).map(([action, label, Icon]) => (
                         <button
                           key={action}
+                          disabled={busy}
                           aria-pressed={pending.decision === action}
                           onClick={() => chooseDecision(action)}
                         >
@@ -802,32 +916,108 @@ function App() {
                   <strong>{tierNames[pending.result.tier]} 모델 추천</strong>
                 </div>
                 <p className="review-reason">{pending.result.reason}</p>
+                <section className="internal-model">
+                  <strong>
+                    내부 분석 · {modelById(routing.analyzer).name}
+                  </strong>
+                  <p>
+                    요청과 현재 문맥을 분석 제공자에게 전송합니다. 분석도 별도로
+                    과금되며 실제 작업은 실행하지 않습니다.
+                  </p>
+                  <button
+                    disabled={
+                      busy ||
+                      !routing.live ||
+                      !providerStatus[modelById(routing.analyzer).provider]
+                    }
+                    onClick={analyze}
+                  >
+                    {busy ? "요청 처리 중…" : "내부 모델로 분석"}
+                  </button>
+                  {!routing.live && (
+                    <small>
+                      현재는 로컬 규칙 추천입니다. API 모드를 켜야 내부 모델을
+                      호출합니다.
+                    </small>
+                  )}
+                  {pending.analysis && (
+                    <div className="analysis-result">
+                      <strong>AI 분석</strong>
+                      <p>{pending.analysis.summary}</p>
+                      <p>{pending.analysis.reason}</p>
+                      <p>
+                        추천:{" "}
+                        {modelById(pending.analysis.recommendedModel).name} ·
+                        선택은 아래에서 직접 변경하세요.
+                      </p>
+                      <small>
+                        분석 사용량: 입력{" "}
+                        {pending.analysis.inputTokens ?? "미확인"} / 출력{" "}
+                        {pending.analysis.outputTokens ?? "미확인"} 토큰
+                      </small>
+                    </div>
+                  )}
+                </section>
                 <label className="review-model">
-                  이번 요청의 모델 등급
+                  이번 요청의 실행 모델
                   <select
                     aria-label="이번 요청 모델"
-                    value={pending.selected}
+                    disabled={busy}
+                    value={pending.modelId}
                     onChange={(e) => {
-                      const selected = e.target.value as Tier;
+                      const model = modelById(e.target.value);
                       setPending({
                         ...pending,
-                        selected,
+                        modelId: model.id,
+                        selected: model.tier,
                         result: estimate(
                           pending.text,
                           context(pending.decision),
                           workspace.budget,
-                          selected,
+                          model.tier,
                         ),
                       });
                     }}
                   >
-                    {Object.entries(tierNames).map(([key, name]) => (
-                      <option key={key} value={key}>
-                        {name} 모델
+                    {models.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} · {tierNames[m.tier]}
                       </option>
                     ))}
                   </select>
                 </label>
+                <div className="model-comparison" aria-label="모델별 가정 비교">
+                  <p>
+                    모델별 실측이 아닌 등급별 출력 가정입니다. 같은 등급의
+                    모델은 같은 범위를 표시합니다.
+                  </p>
+                  {models.map((m) => {
+                    const e = estimate(
+                      pending.text,
+                      context(pending.decision),
+                      workspace.budget,
+                      m.tier,
+                    );
+                    return (
+                      <button
+                        disabled={busy}
+                        key={m.id}
+                        aria-pressed={pending.modelId === m.id}
+                        onClick={() =>
+                          setPending({
+                            ...pending,
+                            modelId: m.id,
+                            selected: m.tier,
+                            result: e,
+                          })
+                        }
+                      >
+                        <span>{m.name}</span>
+                        <span>{range(e.total)} 토큰</span>
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="estimate-breakdown">
                   <div>
                     <span>입력 · 문맥 포함</span>
@@ -851,18 +1041,35 @@ function App() {
                   </div>
                 </div>
                 <p className="small-copy">
-                  실제 계정 한도 대비 %는 추정할 수 없습니다. 모델 연동 전에는
-                  모델명 대신 등급을 제안합니다. 출력량은 가정이며 품질·비용을
-                  보장하지 않습니다.
+                  실제 계정 한도 대비 %는 추정할 수 없습니다. 출력량은 가정이며
+                  품질·비용을 보장하지 않습니다. API 실행은 생성 상한
+                  4,096토큰이며 입력·내부 분석은 별도입니다. 현재 텍스트 답변만
+                  지원하며 파일 수정·셸 실행은 하지 않습니다.
                 </p>
+                {aiError && (
+                  <p className="api-error" role="alert">
+                    {aiError}
+                  </p>
+                )}
                 <div className="review-actions">
-                  <button onClick={() => setPending(null)}>다시 작성</button>
+                  <button disabled={busy} onClick={() => setPending(null)}>
+                    다시 작성
+                  </button>
                   <button
                     className="primary-action"
-                    disabled={!pending.decision}
+                    disabled={
+                      busy ||
+                      !pending.decision ||
+                      (routing.live &&
+                        !providerStatus[modelById(pending.modelId).provider])
+                    }
                     onClick={proceed}
                   >
-                    이 모델로 미리보기
+                    {busy
+                      ? "요청 처리 중…"
+                      : routing.live
+                        ? "선택한 모델로 API 실행"
+                        : "이 모델로 미리보기"}
                   </button>
                 </div>
               </>
@@ -909,6 +1116,95 @@ function App() {
               </>
             ) : (
               <>
+                <section
+                  className="routing-settings"
+                  aria-label="모델 기본 설정"
+                >
+                  <h3>모델 기본 설정</h3>
+                  <div className="preset-buttons">
+                    <button
+                      onClick={() =>
+                        setRouting({ ...presets.openai, live: routing.live })
+                      }
+                    >
+                      OpenAI 기본값
+                    </button>
+                    <button
+                      onClick={() =>
+                        setRouting({ ...presets.anthropic, live: routing.live })
+                      }
+                    >
+                      Claude 기본값
+                    </button>
+                  </div>
+                  <label className="setting-row">
+                    <span>
+                      <strong>내부 분석 모델</strong>
+                      <small>
+                        요청 분류·추천에 사용. 실행 모델과 독립적입니다.
+                      </small>
+                    </span>
+                    <select
+                      aria-label="내부 분석 모델"
+                      value={routing.analyzer}
+                      onChange={(e) =>
+                        setRouting((r) => ({ ...r, analyzer: e.target.value }))
+                      }
+                    >
+                      {models.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="setting-row">
+                    <span>
+                      <strong>기본 실행 모델</strong>
+                      <small>
+                        새 요청의 초기값. 요청마다 다시 선택할 수 있습니다.
+                      </small>
+                    </span>
+                    <select
+                      aria-label="기본 실행 모델"
+                      value={routing.executor}
+                      onChange={(e) =>
+                        setRouting((r) => ({ ...r, executor: e.target.value }))
+                      }
+                    >
+                      {models.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="setting-row">
+                    <span>
+                      <strong>실제 API 사용</strong>
+                      <small>
+                        분석·실행 버튼을 누르면 선택한 제공자로 요청을
+                        전송합니다.
+                      </small>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={routing.live}
+                      onChange={(e) =>
+                        setRouting((r) => ({ ...r, live: e.target.checked }))
+                      }
+                    />
+                  </label>
+                  <p className="small-copy">
+                    OpenAI 키{" "}
+                    {providerStatus.openai ? "감지됨 (미검증)" : "없음"} ·
+                    Claude 키{" "}
+                    {providerStatus.anthropic ? "감지됨 (미검증)" : "없음"}.
+                    키는 .env 또는 환경변수로 설정하고 앱을 재시작하세요. 모델
+                    접근 권한은 실제 호출 시 확인됩니다. 모델 설정은 대화 저장과
+                    별도로 이 기기에 유지됩니다.
+                  </p>
+                </section>
                 <label className="setting-row">
                   <span>
                     <strong>대화 관리 모드</strong>
@@ -984,9 +1280,10 @@ function App() {
                 <div className="connection-info">
                   <Check size={16} />
                   <span>
-                    추천·정리는 현재 로컬 규칙으로 동작합니다.
+                    자동 정리는 로컬 규칙으로 동작합니다. 내부 분석과 실행
+                    모델은 API 모드에서 별도로 호출합니다.
                     <br />
-                    AI 판단과 실제 모델 응답·사용량 연동은 준비 중입니다.
+                    계정 잔여 한도와 전체 작업 예산 강제 제한은 미연결입니다.
                   </span>
                 </div>
               </>
@@ -1009,7 +1306,9 @@ function MessageView({ message }: { message: Chat["messages"][number] }) {
         {message.role === "assistant" ? (
           <>
             <span className="assistant-symbol">✦</span>Aurora
-            <span className="sample-tag">로컬 미리보기</span>
+            <span className="sample-tag">
+              {message.live ? "API 응답" : "로컬 미리보기"}
+            </span>
           </>
         ) : (
           "나"
