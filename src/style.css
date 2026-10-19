@@ -1348,3 +1348,99 @@ html[data-theme="dark"] .composer {
     gap: 5px 10px;
   }
 }
+.modal {
+  max-height: 90vh;
+  overflow: auto;
+}
+.routing-settings h3 {
+  font-size: 13px;
+  font-weight: 500;
+}
+.preset-buttons {
+  display: flex;
+  gap: 8px;
+}
+.preset-buttons button,
+.internal-model > button {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 10px;
+}
+.routing-settings .setting-row select {
+  max-width: 180px;
+  width: 180px;
+  flex-shrink: 0;
+}
+.internal-model {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 17px 0;
+  background: var(--panel);
+}
+.internal-model > strong {
+  font-size: 12px;
+  font-weight: 500;
+}
+.internal-model p {
+  font-size: 10px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.internal-model small {
+  font-size: 9px;
+  display: block;
+  color: var(--muted);
+  margin-top: 9px;
+  line-height: 1.8;
+}
+.internal-model button:disabled {
+  opacity: 0.45;
+}
+.analysis-result {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  font-size: 11px;
+}
+.model-comparison {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  padding: 10px;
+  margin-bottom: 16px;
+}
+.model-comparison > p {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin: 0 0 10px;
+}
+.model-comparison button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  border-radius: 5px;
+  padding: 8px;
+  font-size: 10px;
+  text-align: left;
+}
+.model-comparison button span:last-child {
+  color: var(--muted);
+  font-size: 9px;
+}
+.model-comparison button[aria-pressed="true"] {
+  background: var(--track);
+  color: var(--accent);
+}
+.api-error {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #ad5146;
+  overflow-wrap: anywhere;
+}
+.review-model select {
+  max-width: 260px;
+}

@@ -9,7 +9,13 @@ let app;
 try {
   app = await electron.launch({
     args: ["."],
-    env: { ...process.env, AURORA_QA_DATA: profile },
+    env: {
+      ...process.env,
+      AURORA_QA_DATA: profile,
+      AURORA_DISABLE_ENV_FILE: "1",
+      OPENAI_API_KEY: "",
+      ANTHROPIC_API_KEY: "",
+    },
   });
   const page = await app.firstWindow();
   page.on("pageerror", (e) => errors.push(e.message));
@@ -36,7 +42,7 @@ try {
     page.getByRole("button", { name: "새 세션", exact: true }),
   ).toHaveCount(0);
   await expect(page.getByLabel("사용량", { exact: true })).toContainText(
-    "계정 미연결",
+    "미리보기",
   );
   await page.screenshot({ path: "artifacts/aurora-desktop.png" });
   // Preflight cancellation preserves the draft and creates no messages.
@@ -47,7 +53,7 @@ try {
   await expect(editor).toHaveValue("코드의 보안 아키텍처를 설계해 줘");
   await expect(page.locator(".message")).toHaveCount(0);
   await page.getByRole("button", { name: "요청 검토", exact: true }).click();
-  await page.getByLabel("이번 요청 모델").selectOption("standard");
+  await page.getByLabel("이번 요청 모델").selectOption("gpt-6.1-sol");
   await proceed();
   await expect(page.getByLabel("대화 내용")).toContainText(
     "선택한 모델 등급 · 표준",
@@ -139,6 +145,111 @@ try {
   await close();
   await page.reload();
   await expect(page.locator(".bundle")).toHaveCount(0);
+  // Defaults are separate from chat persistence; missing keys must block live calls.
+  expect(await page.evaluate(() => window.auroraAI.status())).toEqual({
+    openai: false,
+    anthropic: false,
+  });
+  await settings();
+  await expect(page.getByLabel("내부 분석 모델", { exact: true })).toHaveValue(
+    "gpt-6-luna",
+  );
+  await expect(page.getByLabel("기본 실행 모델", { exact: true })).toHaveValue(
+    "gpt-6.1-sol",
+  );
+  await page
+    .getByRole("button", { name: "Claude 기본값", exact: true })
+    .click();
+  await expect(page.getByLabel("내부 분석 모델", { exact: true })).toHaveValue(
+    "claude-haiku-5-5",
+  );
+  await expect(page.getByLabel("기본 실행 모델", { exact: true })).toHaveValue(
+    "claude-sonnet-5-5",
+  );
+  await page
+    .getByLabel("기본 실행 모델", { exact: true })
+    .selectOption("gpt-6-astra");
+  await page.getByText("실제 API 사용", { exact: true }).click();
+  await page.screenshot({ path: "artifacts/aurora-model-settings.png" });
+  await close();
+  await review("새로운 모델 설정 확인");
+  await expect(page.getByLabel("이번 요청 모델")).toHaveValue("gpt-6-astra");
+  await expect(
+    page.getByRole("button", { name: "내부 모델로 분석", exact: true }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "선택한 모델로 API 실행", exact: true }),
+  ).toBeDisabled();
+  await close();
+  // Mock only the IPC provider boundary. No real credentials or provider calls in QA.
+  await app.evaluate(({ ipcMain }) => {
+    globalThis.auroraTestCalls = [];
+    ipcMain.removeHandler("aurora:ai-status");
+    ipcMain.handle("aurora:ai-status", () => ({
+      openai: true,
+      anthropic: true,
+    }));
+    ipcMain.removeHandler("aurora:ai-request");
+    ipcMain.handle("aurora:ai-request", (_event, p) => {
+      globalThis.auroraTestCalls.push(p);
+      return p.action === "analyze"
+        ? {
+            model: p.model,
+            text: "",
+            summary: "모의 범위 분석",
+            reason: "모의 추천 근거",
+            recommendedModel: "gpt-6.1-sol",
+            inputTokens: 12,
+            outputTokens: 23,
+            incomplete: false,
+          }
+        : {
+            model: p.model,
+            text: "모의 API 답변",
+            inputTokens: 34,
+            outputTokens: 45,
+            incomplete: false,
+          };
+    });
+  });
+  await page.reload();
+  await review("요약해 줘");
+  await expect(page.getByLabel("이번 요청 모델")).toHaveValue("gpt-6-astra");
+  await page
+    .getByRole("button", { name: "내부 모델로 분석", exact: true })
+    .click();
+  await expect(page.locator(".analysis-result")).toContainText(
+    "모의 범위 분석",
+  );
+  await expect(page.locator(".message")).toHaveCount(0);
+  await page.getByLabel("이번 요청 모델").selectOption("gpt-6.1-sol");
+  await page
+    .getByRole("button", { name: "선택한 모델로 API 실행", exact: true })
+    .click();
+  await expect(page.getByLabel("대화 내용")).toContainText("모의 API 답변");
+  await expect(page.locator(".message.assistant")).toContainText("API 응답");
+  const calls = await app.evaluate(() => globalThis.auroraTestCalls);
+  expect(calls.map((c) => [c.action, c.model])).toEqual([
+    ["analyze", "claude-haiku-5-5"],
+    ["execute", "gpt-6.1-sol"],
+  ]);
+  expect(calls.map((c) => c.maxOutputTokens)).toEqual([2048, 4096]);
+  await app.evaluate(({ ipcMain }) => {
+    ipcMain.removeHandler("aurora:ai-request");
+    ipcMain.handle("aurora:ai-request", (_event, p) => {
+      globalThis.auroraTestCalls.push(p);
+      throw new Error("모의 API 오류");
+    });
+  });
+  await review("추가 설명");
+  await page
+    .getByRole("button", { name: "선택한 모델로 API 실행", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("모의 API 오류");
+  await expect(editor).toHaveValue("추가 설명");
+  await expect(page.locator(".message")).toHaveCount(2);
+  expect(await app.evaluate(() => globalThis.auroraTestCalls.length)).toBe(3);
+  await close();
   const prefs = await app.evaluate(({ BrowserWindow }) => {
     const p =
       BrowserWindow.getAllWindows()[0].webContents.getLastWebPreferences();
@@ -171,6 +282,10 @@ try {
           "persistence/reload",
           "dark/compact",
           "sandbox",
+          "role-defaults-and-persistence",
+          "missing-key-guard",
+          "mocked-analyzer-and-executor-routing",
+          "API-error-retains-draft-no-retry",
         ],
       },
       null,

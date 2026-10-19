@@ -1,7 +1,18 @@
-const { app, BrowserWindow, protocol, net, session } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  protocol,
+  net,
+  session,
+  ipcMain,
+} = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const fs = require("node:fs");
+const providers = require("./providers.cjs");
+const envFile = path.join(__dirname, "../.env");
+if (!process.env.AURORA_DISABLE_ENV_FILE && fs.existsSync(envFile))
+  process.loadEnvFile(envFile);
 
 app.setName("Aurora");
 app.setAppUserModelId("com.uiwwsw.aurora");
@@ -29,6 +40,7 @@ function createWindow() {
       ? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 20, y: 22 } }
       : {}),
     webPreferences: {
+      preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -39,6 +51,25 @@ function createWindow() {
   win.loadURL("aurora://app/index.html");
 }
 app.whenReady().then(() => {
+  const authorized = (event) =>
+    event.senderFrame?.url === "aurora://app/index.html" &&
+    BrowserWindow.fromWebContents(event.sender);
+  const inFlight = new Set();
+  ipcMain.handle("aurora:ai-status", (event) => {
+    if (!authorized(event)) throw new Error("Forbidden");
+    return providers.status();
+  });
+  ipcMain.handle("aurora:ai-request", async (event, payload) => {
+    if (!authorized(event)) throw new Error("Forbidden");
+    const id = event.sender.id;
+    if (inFlight.has(id)) throw new Error("이미 요청을 처리 중입니다.");
+    inFlight.add(id);
+    try {
+      return await providers.request(payload);
+    } finally {
+      inFlight.delete(id);
+    }
+  });
   const root = path.resolve(__dirname, "../dist");
   protocol.handle("aurora", (request) => {
     const url = new URL(request.url);
