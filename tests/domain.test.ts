@@ -40,3 +40,72 @@ test("corrupt saved data is discarded instead of crashing the app", () => {
   const chat = { id: "1", title: "valid", messages: [], tier: "light" };
   assert.deepEqual(parseStoredChats(JSON.stringify([chat])), [chat]);
 });
+
+import {
+  activeContext,
+  emptyWorkspace,
+  estimate,
+  organize,
+  propose,
+  restoreWorkspace,
+} from "../src/domain.ts";
+import type { Bundle } from "../src/domain.ts";
+const bundle: Bundle = {
+  id: "work",
+  title: "코드 작업",
+  status: "active",
+  tier: "standard",
+  messages: [{ id: "u", role: "user", text: "코드 버그를 수정해 줘" }],
+};
+test("preflight includes active history and exposes unknown account conversion", () => {
+  const first = estimate("요약해 줘", [], null);
+  const followup = estimate("요약해 줘", bundle.messages, 100000);
+  assert.ok(followup.input > first.input);
+  assert.equal(first.percent, null);
+  assert.equal(estimate("요약해 줘", [], NaN).percent, null);
+  assert.equal(estimate("요약해 줘", [], 0).percent, null);
+  assert.deepEqual(
+    followup.percent,
+    followup.total.map((n) => (n / 100000) * 100),
+  );
+  assert.ok(
+    estimate("요약", [], null, "advanced").total[1] >
+      estimate("요약", [], null, "light").total[1],
+  );
+});
+test("topic change proposes cleanup but never mutates stored work", () => {
+  const list = [structuredClone(bundle)];
+  assert.equal(propose(list, "여행 일정을 추천해 줘")?.bundleId, "work");
+  assert.equal(propose(list, "코드 테스트도 작성해 줘"), null);
+  assert.ok(propose(list, "고마워 여기까지"));
+  assert.equal(list[0].status, "active");
+});
+test("group/archive/trash remove prior context without deleting messages; restore is possible", () => {
+  for (const action of ["grouped", "archived", "trashed"] as const) {
+    const changed = organize([bundle], "work", action);
+    assert.equal(activeContext(changed).length, 0);
+    assert.deepEqual(changed[0].messages, bundle.messages);
+    assert.equal(bundle.status, "active");
+    assert.equal(
+      organize(changed, "work", "grouped")[0].messages[0].text,
+      bundle.messages[0].text,
+    );
+  }
+});
+test("v1 multi-session data migrates to legacy without flattening or deleting it", () => {
+  const old = JSON.stringify([
+    { id: "old", title: "기존", messages: [], tier: "light" },
+  ]);
+  const restored = restoreWorkspace(null, old);
+  assert.equal(restored.mode, "legacy");
+  assert.equal(restored.legacyChats[0].id, "old");
+  assert.deepEqual(restored.bundles, []);
+  const both = {
+    ...emptyWorkspace(),
+    save: true,
+    bundles: [bundle],
+    legacyChats: restored.legacyChats,
+  };
+  assert.deepEqual(restoreWorkspace(JSON.stringify(both), null), both);
+  assert.deepEqual(restoreWorkspace("{broken", null), emptyWorkspace());
+});
