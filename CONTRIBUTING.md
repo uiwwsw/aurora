@@ -12,7 +12,6 @@ npm test
 npm run test:desktop
 ```
 
-관리자의 SSD 환경에서는 npm 명령 앞에 `./dev`를 사용합니다.
 데스크톱 테스트는 독립 임시 프로필을 생성하고, 결과를 `artifacts/`에 기록합니다.
 
 ## 변경 제출
