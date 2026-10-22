@@ -5,6 +5,8 @@ const {
   net,
   session,
   ipcMain,
+  dialog,
+  Menu,
 } = require("electron");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
@@ -106,6 +108,15 @@ else
     );
     session.defaultSession.setPermissionCheckHandler(() => false);
     createWindow();
+    require("./updates.cjs").setupUpdates({
+      app,
+      dialog,
+      Menu,
+      autoUpdater: require("electron-updater").autoUpdater,
+      macSigned:
+        require("../package.json").auroraAutoUpdate?.macSigned === true,
+      disabled: !!process.env.AURORA_QA_DATA,
+    });
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
     });

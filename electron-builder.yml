@@ -17,7 +17,6 @@ mac:
   target: [dmg, zip]
   category: public.app-category.productivity
   icon: build/icon.png
-  identity: "-"
   notarize: false
   artifactName: Aurora-${version}-mac-${arch}.${ext}
 dmg:
@@ -43,4 +42,8 @@ nsis:
   createStartMenuShortcut: true
   deleteAppDataOnUninstall: false
   runAfterFinish: false
-publish: null
+publish:
+  provider: github
+  owner: uiwwsw
+  repo: aurora
+  releaseType: prerelease

@@ -1,6 +1,16 @@
+@font-face {
+  font-family: "SUITE";
+  src: url("/fonts/SUITE-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
 :root {
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    "SUITE",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
   color: #34342f;
   background: #faf9f6;
   font-synthesis: none;
@@ -1443,4 +1453,31 @@ html[data-theme="dark"] .composer {
 }
 .review-model select {
   max-width: 260px;
+}
+
+@media (max-width: 680px) {
+  .app,
+  .app.sidebar-closed,
+  .app.usage-closed,
+  .app.sidebar-closed.usage-closed {
+    grid-template-columns: minmax(0, 1fr);
+    height: 100dvh;
+  }
+  .app .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(280px, 90vw);
+    z-index: 5;
+    box-shadow: 8px 0 30px #0002;
+  }
+  .app.sidebar-closed .sidebar {
+    display: none;
+  }
+  .app .usage-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    width: min(320px, 100vw);
+    z-index: 4;
+    box-shadow: -8px 0 30px #0002;
+  }
 }
