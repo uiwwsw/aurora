@@ -1,9 +1,9 @@
 {
   "schema": 1,
   "runtime": "electron-react-typescript",
-  "execution": "none",
+  "execution": "automatic",
   "requireCleanGit": true,
   "verify": ["./dev npm run build", "./dev npm test"],
-  "deploy": [],
-  "healthchecks": []
+  "deploy": ["./dev vercel deploy --prod --yes"],
+  "healthchecks": ["https://aurora-two-virid.vercel.app/health.json"]
 }

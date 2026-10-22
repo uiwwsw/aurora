@@ -7,7 +7,7 @@
   "symbol": "✦",
   "color": "#c0cfa5",
   "summary": "작업 범위와 예상 토큰을 검토하는 데스크톱 AI 작업 공간",
-  "description": "macOS·Windows용 개발 프리뷰입니다. 작업 정리와 레거시 모드, 내부 분석·실행 모델 설정 및 토큰 가정 비교를 제공합니다. macOS Apple Silicon·Intel DMG와 Windows x64 EXE 설치 파일을 공개했습니다. 현재 배포 인증서 서명·macOS 공증은 없으며 실제 API 라이브 호출과 계정 잔여 한도·전체 예산 제어는 미검증/미연결입니다.",
+  "description": "macOS·Windows용 개발 프리뷰입니다. 작업 정리와 레거시 모드, 내부 분석·실행 모델 설정 및 토큰 가정 비교를 제공합니다. macOS Apple Silicon·Intel DMG와 Windows x64 EXE 설치 파일을 공개했습니다. 현재 배포 인증서 서명·macOS 공증은 없으며 실제 API 라이브 호출과 계정 잔여 한도·전체 예산 제어는 미검증/미연결입니다. Vercel에서 브라우저용 로컬 미리보기도 제공합니다. 앱 자동 업데이트 연결은 개발 중이며 macOS는 정식 서명이 필요합니다.",
   "features": [
     "하나의 대화와 작업 정리·레거시 모드",
     "내부 분석·실행 모델 설정과 요청별 선택",
@@ -23,10 +23,14 @@
     {
       "platform": "package",
       "url": "https://github.com/uiwwsw/aurora/releases/tag/v0.1.1"
+    },
+    {
+      "platform": "web",
+      "url": "https://aurora-two-virid.vercel.app"
     }
   ],
   "evidence": {
-    "verifiedAt": "2026-10-19",
-    "note": "2026-10-19 v0.1.1 Desktop release CI(39197323796)가 macOS arm64·Intel·Windows x64 네이티브 환경의 테스트·패키징·설치 후 실행 검증과 게시까지 성공함. DMG 2개·ZIP 2개·EXE 1개를 공개하고 비인증 HTTP 200, 파일 크기·GitHub SHA-256 digest·manifest 일치를 확인함. macOS는 ad-hoc 서명이며 Developer ID 서명·공증 및 Windows 인증서 서명은 없음. 완성 제품 출시를 주장하지 않는 개발 프리뷰로 development 상태 유지."
+    "verifiedAt": "2026-10-23",
+    "note": "2026-10-19 v0.1.1 Desktop release CI(39197323796)가 macOS arm64·Intel·Windows x64 네이티브 환경의 테스트·패키징·설치 후 실행 검증과 게시까지 성공함. DMG 2개·ZIP 2개·EXE 1개를 공개하고 비인증 HTTP 200, 파일 크기·GitHub SHA-256 digest·manifest 일치를 확인함. macOS는 ad-hoc 서명이며 Developer ID 서명·공증 및 Windows 인증서 서명은 없음. 완성 제품 출시를 주장하지 않는 개발 프리뷰로 development 상태 유지. 2026-10-23 Vercel 프로젝트의 GitHub main 연결과 웹·health.json·자체 호스팅 글꼴 HTTP 200을 확인함. 자동 업데이트 로직·릴리스 피드 검증 테스트와 로컬 macOS 패키지 실행을 통과했으나 실제 버전 간 업데이트·Developer ID 서명은 미검증."
   }
 }

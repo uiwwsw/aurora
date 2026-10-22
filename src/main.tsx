@@ -114,8 +114,23 @@ function App() {
     }
   }, [routing]);
   const [pending, setPending] = useState<Pending | null>(null);
-  const [sidebar, setSidebar] = useState(true);
-  const [usageOpen, setUsageOpen] = useState(true);
+  const [sidebar, setSidebar] = useState(
+    () => !window.matchMedia("(max-width: 680px)").matches,
+  );
+  const [usageOpen, setUsageOpen] = useState(
+    () => !window.matchMedia("(max-width: 680px)").matches,
+  );
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 680px)");
+    const collapse = () => {
+      if (media.matches) {
+        setSidebar(false);
+        setUsageOpen(false);
+      }
+    };
+    media.addEventListener("change", collapse);
+    return () => media.removeEventListener("change", collapse);
+  }, []);
   const [dialog, setDialog] = useState<"search" | "settings" | null>(null);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"current" | "archived" | "trashed">(
