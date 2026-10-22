@@ -102,7 +102,6 @@ npm run package:win    # Windows x64 EXE (Windows에서 빌드)
 
 macOS·Windows CI에서 빌드와 단위 테스트를 검증합니다. 태그 릴리스 파이프라인은 macOS arm64·x64와 Windows x64 설치 파일을 네이티브 러너에서 만들고, 설치 후 실행 검증을 통과한 파일만 공개합니다.
 API 테스트는 가짜 응답을 사용하며 실제 키나 과금 요청을 사용하지 않습니다.
-관리자의 SSD 환경에서는 npm 명령 앞에 `./dev`를 사용합니다.
 
 ## 릴리스 자동화
 
