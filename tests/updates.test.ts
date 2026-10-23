@@ -59,6 +59,15 @@ test("packaged app checks once on startup, prevents overlapping checks, and neve
   f.updater.emit("update-not-available");
   assert.match(f.messages.at(-1).message, /최신/);
 });
+
+test("Store packages delegate updates to Microsoft Store without contacting GitHub", async () => {
+  const f = fixture({ storeDistribution: true });
+  await f.controller.check(true);
+  assert.equal(f.counts().checks, 0);
+  assert.equal(f.counts().intervals, 0);
+  assert.equal(f.counts().installs, 0);
+  assert.match(f.messages[0].message, /Microsoft Store/);
+});
 test("downloaded update offers restart and defers when user is working", async () => {
   const f = fixture();
   f.updater.emit("update-downloaded");

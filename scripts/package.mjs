@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { writeFileSync, readFileSync } from "node:fs";
+import { macSigning } from "./mac-signing.mjs";
 const require = createRequire(import.meta.url);
 const env = { ...process.env };
 const mac =
@@ -11,18 +12,9 @@ env.CSC_LINK = (mac ? env.MAC_CSC_LINK : env.WIN_CSC_LINK) || env.CSC_LINK;
 env.CSC_KEY_PASSWORD =
   (mac ? env.MAC_CSC_KEY_PASSWORD : env.WIN_CSC_KEY_PASSWORD) ||
   env.CSC_KEY_PASSWORD;
-const signedMac = mac && !!env.CSC_LINK;
-const overrides = [];
-if (signedMac) {
-  // Import Developer ID and require signing instead of the development identity.
-  overrides.push("-c.forceCodeSigning=true");
-  if (!env.APPLE_ID || !env.APPLE_APP_SPECIFIC_PASSWORD || !env.APPLE_TEAM_ID)
-    throw new Error(
-      "Signed macOS releases require Apple notarization credentials.",
-    );
-  overrides.push("-c.mac.notarize=true");
-}
-if (mac && !signedMac) overrides.push("-c.mac.identity=-");
+const signing = mac ? macSigning(env) : { signed: false, overrides: [] };
+const signedMac = signing.signed;
+const overrides = [...signing.overrides];
 if (!mac && env.CSC_LINK) overrides.push("-c.forceCodeSigning=true");
 overrides.push(`-c.extraMetadata.auroraAutoUpdate.macSigned=${signedMac}`);
 if (env.DEV_BUILD_ROOT) {

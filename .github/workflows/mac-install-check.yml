@@ -1,0 +1,67 @@
+name: Signed macOS installed-app checks
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  install:
+    # Draft release visibility requires push access. This token is ephemeral;
+    # the job only downloads installers and never writes repository content.
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            arch: arm64
+          - os: macos-15-intel
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Download and verify signed installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ARCH: ${{ matrix.arch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p 'require("./package.json").version')
+          FILE="Aurora-$VERSION-mac-$ARCH.dmg"
+          READY=false
+          for ATTEMPT in $(seq 1 60); do
+            if gh release download "v$VERSION" --repo "$GITHUB_REPOSITORY" --pattern "$FILE" --dir "$RUNNER_TEMP/installer" --clobber; then
+              READY=true
+              break
+            fi
+            sleep 10
+          done
+          if [ "$READY" != true ]; then echo "Verified installer is not available in the draft release."; exit 1; fi
+          MOUNT="$RUNNER_TEMP/aurora-dmg"
+          mkdir -p "$MOUNT"
+          hdiutil attach "$RUNNER_TEMP/installer/$FILE" -readonly -nobrowse -mountpoint "$MOUNT"
+          trap 'hdiutil detach "$MOUNT"' EXIT
+          APP="$RUNNER_TEMP/installed/Aurora.app"
+          ditto "$MOUNT/Aurora.app" "$APP"
+          codesign --verify --deep --strict "$APP"
+          # Ticket validation is completed before uploading the signed draft.
+          # Native runners assess Gatekeeper and launch the installed binary;
+          # do not duplicate CloudKit lookups on hosts with broken connectivity.
+          spctl --assess --type execute "$APP"
+          node scripts/check-packaged-notice.mjs "$APP/Contents/Resources/app.asar"
+          node scripts/package-smoke.mjs "$APP/Contents/MacOS/Aurora"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: signed-installed-qa-${{ matrix.arch }}
+          path: artifacts/installed-*.png
+          if-no-files-found: ignore

@@ -1,0 +1,72 @@
+name: Windows release packages
+on:
+  push:
+    branches: ["codex/aurora-signed-release-*"]
+  workflow_dispatch:
+    inputs:
+      store_identity_name:
+        description: Partner Center package identity (leave empty for EXE only)
+        type: string
+      store_publisher:
+        description: Partner Center publisher, including CN=
+        type: string
+      store_publisher_display_name:
+        description: Partner Center publisher display name
+        type: string
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:desktop
+      - name: Build direct-download EXE
+        run: npm run package:win
+      - name: Verify packaged notice and private-file exclusions
+        shell: pwsh
+        run: |
+          $version = node -p 'require("./package.json").version'
+          node scripts/check-packaged-notice.mjs "distribution/$version/win-unpacked/resources/app.asar"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Install and launch EXE
+        shell: pwsh
+        run: |
+          $version = node -p 'require("./package.json").version'
+          $installer = Get-Item "distribution/$version/Aurora-$version-windows-x64.exe"
+          $target = Join-Path $env:RUNNER_TEMP 'AuroraInstalled'
+          $process = Start-Process -FilePath $installer.FullName -ArgumentList '/S', "/D=$target" -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "Installer failed: $($process.ExitCode)" }
+          node scripts/package-smoke.mjs "$target/Aurora.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build Store submission package
+        if: inputs.store_identity_name != ''
+        env:
+          STORE_IDENTITY_NAME: ${{ inputs.store_identity_name }}
+          STORE_PUBLISHER: ${{ inputs.store_publisher }}
+          STORE_PUBLISHER_DISPLAY_NAME: ${{ inputs.store_publisher_display_name }}
+        run: node scripts/package-store.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-win-x64
+          path: |
+            distribution/*/Aurora-*.exe
+            distribution/*/*.blockmap
+            distribution/*/latest.yml
+            distribution/*/build-info-*.json
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: inputs.store_identity_name != ''
+        with:
+          name: microsoft-store-submission
+          path: distribution/store/*.appx
+          if-no-files-found: error

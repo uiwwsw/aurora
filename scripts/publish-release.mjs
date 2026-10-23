@@ -22,7 +22,17 @@ const expected = [
   `Aurora-${pkg.version}-mac-x64.zip`,
   `Aurora-${pkg.version}-windows-x64.exe`,
 ];
-const names = await readdir(directory, { recursive: true });
+const discovered = await readdir(directory, { recursive: true });
+// Rechecking generated output must use the original runner artifacts, rather
+// than treating flattened copies and merged feeds as a second input build.
+const nestedBasenames = new Set(
+  discovered
+    .filter((name) => path.basename(name) !== name)
+    .map((name) => path.basename(name)),
+);
+const names = discovered.filter(
+  (name) => path.basename(name) !== name || !nestedBasenames.has(name),
+);
 const manifest = {
   version: pkg.version,
   tag,
@@ -121,6 +131,10 @@ const signedMac = ["mac-arm64", "mac-x64"].every(
   (k) => manifest.signing[k].developerSigned && manifest.signing[k].notarized,
 );
 const signedWin = manifest.signing["win-x64"].developerSigned;
+if (!signedMac)
+  throw new Error(
+    "Public releases require both macOS architectures to be signed and notarized.",
+  );
 const signingNote = `macOS: ${signedMac ? "Developer ID 서명·공증 완료" : "ad-hoc 서명, Developer ID 서명·공증 없음"}. Windows: ${signedWin ? "인증서 서명 적용" : "개발자 인증서 서명 없음"}.`;
 const notes = `Aurora ${pkg.version} 개발 프리뷰입니다. Node.js 설치 없이 사용할 수 있는 macOS·Windows 설치 파일을 제공합니다.\n\n| 운영체제 | 다운로드 |\n| --- | --- |\n| macOS · Apple Silicon | [DMG](${manifest.assets[0].url}) |\n| macOS · Intel | [DMG](${manifest.assets[2].url}) |\n| Windows · x64 | [EXE 설치 파일](${manifest.assets[4].url}) |\n\nmacOS는 DMG를 열어 Aurora를 Applications 폴더로 옮깁니다. Windows는 EXE 설치 프로그램을 실행합니다.\n\n**서명 상태:** ${signingNote} 운영체제의 보안 확인 또는 실행 제한이 나타날 수 있습니다.\n\n기본은 오프라인 미리보기입니다. 실제 API 사용은 별도 키 설정이 필요하며, 라이브 모델 호출은 아직 검증하지 않았습니다. 텍스트 답변만 지원하고 파일 수정·셸 실행은 하지 않습니다. 계정 잔여량·전체 작업 예산 제한은 아직 없습니다. Windows는 새 버전을 자동 다운로드하고 정상 종료 시 설치합니다. macOS 자동 업데이트는 Developer ID 서명 버전에서 지원합니다. 기존 0.1.1 이하 버전은 새 설치 파일로 한 번 교체해야 합니다.\n\n체크섬은 SHA256SUMS.txt, 파일 목록과 서명 상태는 release-manifest.json을 참고하세요.\n\n[README](https://github.com/${repo}#readme) · [변경 기록](https://github.com/${repo}/blob/${tag}/CHANGELOG.md)\n`;
 await writeFile(path.join(directory, "release-notes.md"), notes);
