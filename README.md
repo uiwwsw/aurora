@@ -7,11 +7,11 @@
 
 ## 다운로드
 
-[![macOS Apple Silicon](https://img.shields.io/badge/macOS-Apple%20Silicon-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.1/Aurora-0.1.1-mac-arm64.dmg)
-[![macOS Intel](https://img.shields.io/badge/macOS-Intel-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.1/Aurora-0.1.1-mac-x64.dmg)
-[![Windows x64](https://img.shields.io/badge/Windows-x64-4169a1?style=for-the-badge)](https://github.com/uiwwsw/aurora/releases/download/v0.1.1/Aurora-0.1.1-windows-x64.exe)
+[![macOS Apple Silicon](https://img.shields.io/badge/macOS-Apple%20Silicon-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-arm64.dmg)
+[![macOS Intel](https://img.shields.io/badge/macOS-Intel-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-x64.dmg)
+[![Windows x64](https://img.shields.io/badge/Windows-x64-4169a1?style=for-the-badge)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-windows-x64.exe)
 
-[릴리스 · ZIP · 체크섬](https://github.com/uiwwsw/aurora/releases/tag/v0.1.1)
+[릴리스 · ZIP · 체크섬](https://github.com/uiwwsw/aurora/releases/tag/v0.1.2)
 
 macOS는 DMG에서 Aurora를 Applications 폴더로 옮기고, Windows는 EXE 설치 프로그램을 실행합니다. **Node.js는 필요하지 않습니다.**
 macOS는 ad-hoc 서명이며 Developer ID 서명·공증은 없습니다. Windows도 개발자 인증서 미서명 상태로, 운영체제의 보안 확인 또는 실행 제한이 나타날 수 있습니다.
