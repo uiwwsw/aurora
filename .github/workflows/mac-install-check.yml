@@ -1,13 +1,14 @@
 name: Signed macOS installed-app checks
 on:
-  push:
-    branches: ["codex/aurora-signed-release-*"]
-    paths: [".github/workflows/mac-install-check.yml"]
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   install:
+    # Draft release visibility requires push access. This token is ephemeral;
+    # the job only downloads installers and never writes repository content.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
