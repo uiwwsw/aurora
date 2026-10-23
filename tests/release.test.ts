@@ -61,8 +61,8 @@ function fixture(fn: (root: string, files: string[]) => void) {
         version: "0.1.2",
         platform,
         arch,
-        developerSigned: false,
-        notarized: false,
+        developerSigned: platform === "mac",
+        notarized: platform === "mac",
       }),
     );
   }
@@ -99,8 +99,19 @@ test("release merges macOS architectures and verifies update checksums before pu
         "utf8",
       ),
     );
-    assert.equal(manifest.signing["mac-arm64"].developerSigned, false);
+    assert.equal(manifest.signing["mac-arm64"].developerSigned, true);
     assert.ok(manifest.assets.some((a: any) => a.name === "latest.yml"));
+  }));
+test("unsigned macOS output cannot be published", () =>
+  fixture((root) => {
+    const file = path.join(
+      root,
+      "release-assets/mac-arm64/build-info-mac-arm64.json",
+    );
+    const report = JSON.parse(readFileSync(file, "utf8"));
+    report.notarized = false;
+    writeFileSync(file, JSON.stringify(report));
+    assert.throws(() => verify(root), /signed and notarized/);
   }));
 test("tampered installer aborts release before any GitHub write", () =>
   fixture((root, files) => {

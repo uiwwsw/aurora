@@ -116,6 +116,9 @@ else
       macSigned:
         require("../package.json").auroraAutoUpdate?.macSigned === true,
       disabled: !!process.env.AURORA_QA_DATA,
+      storeDistribution:
+        process.windowsStore === true ||
+        require("../package.json").auroraDistribution === "store",
     });
     app.on("activate", () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();

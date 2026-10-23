@@ -7,6 +7,7 @@ function setupUpdates({
   platform = process.platform,
   macSigned = false,
   disabled = false,
+  storeDistribution = process.windowsStore === true,
   setIntervalImpl = setInterval,
 }) {
   let checking = false;
@@ -15,6 +16,7 @@ function setupUpdates({
   const unavailable =
     !app.isPackaged ||
     disabled ||
+    storeDistribution ||
     !["darwin", "win32"].includes(platform) ||
     (platform === "darwin" && !macSigned);
   const tell = (message, detail = "") =>
@@ -50,10 +52,14 @@ function setupUpdates({
     if (unavailable) {
       if (requested)
         await tell(
-          "이 빌드에서는 자동 업데이트를 사용할 수 없습니다.",
-          platform === "darwin" && !macSigned
-            ? "Developer ID로 서명된 버전이 필요합니다. 기존 개발 프리뷰는 새 설치 파일로 교체해 주세요."
-            : "설치된 배포 앱에서 사용할 수 있습니다.",
+          storeDistribution
+            ? "Microsoft Store에서 업데이트를 확인해 주세요."
+            : "이 빌드에서는 자동 업데이트를 사용할 수 없습니다.",
+          storeDistribution
+            ? "Store 설치 앱의 업데이트는 Microsoft Store가 관리합니다."
+            : platform === "darwin" && !macSigned
+              ? "Developer ID로 서명된 버전이 필요합니다. 기존 개발 프리뷰는 새 설치 파일로 교체해 주세요."
+              : "설치된 배포 앱에서 사용할 수 있습니다.",
         );
       return;
     }

@@ -87,3 +87,7 @@ A version bump on main triggers validation, tag creation, platform packaging, in
 - [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/uiwwsw/aurora/issues)
 
 Code is licensed under [MIT](LICENSE). The SUITE font has a [separate license](public/fonts/LICENSE).
+
+## AI training and data collection notice
+
+No AI training, fine-tuning or training-data collection without prior written consent. See [AI-TRAINING-NOTICE.md](AI-TRAINING-NOTICE.md). Existing licenses and third-party/user rights remain unchanged.
