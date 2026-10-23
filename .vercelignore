@@ -10,8 +10,12 @@ artifacts
 build
 electron
 tests
-scripts
+scripts/*
+!scripts/build-web.mjs
 readme
 docs
 AGENTS.md
 dev
+
+web-dist
+.local-notes
