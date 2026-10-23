@@ -12,19 +12,19 @@
 
 [브라우저 데모 열기](https://aurora-two-virid.vercel.app/) — 설치 없이 작업 정리, 모델 비교와 토큰 범위 미리보기를 체험합니다. 웹 데모는 외부 AI를 호출하지 않으며, 대화형 화면은 현재 한국어입니다.
 
-실제 제공자 연결과 텍스트 답변 실행은 설치 앱에서 사용합니다. 공개 0.1.2 프리뷰는 내부 분석을 명시적으로 요청하고 실행 모델을 직접 선택하는 흐름입니다. 이름의 *Auto Router · Low AI*는 제품 방향이며, 완성된 자동 라우팅을 뜻하지 않습니다.
+실제 제공자 연결과 텍스트 답변 실행은 설치 앱에서 사용합니다. 공개 0.1.3 프리뷰는 내부 분석을 명시적으로 요청하고 실행 모델을 직접 선택하는 흐름입니다. 이름의 *Auto Router · Low AI*는 제품 방향이며, 완성된 자동 라우팅을 뜻하지 않습니다.
 
-## 다운로드 · 0.1.2
+## 다운로드 · 0.1.3
 
 | 운영체제 | 설치 파일 |
 | --- | --- |
-| macOS · Apple Silicon | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-arm64.dmg) |
-| macOS · Intel | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-x64.dmg) |
-| Windows · x64 | [EXE](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-windows-x64.exe) |
+| macOS · Apple Silicon | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.3/Aurora-0.1.3-mac-arm64.dmg) |
+| macOS · Intel | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.3/Aurora-0.1.3-mac-x64.dmg) |
+| Windows · x64 | [EXE](https://github.com/uiwwsw/aurora/releases/download/v0.1.3/Aurora-0.1.3-windows-x64.exe) |
 
-[ZIP · 변경 기록 · 체크섬과 서명 정보](https://github.com/uiwwsw/aurora/releases/tag/v0.1.2)
+[ZIP · 변경 기록 · 체크섬과 서명 정보](https://github.com/uiwwsw/aurora/releases/tag/v0.1.3)
 
-macOS는 DMG의 Aurora를 Applications 폴더로 옮기고, Windows는 설치 프로그램을 실행합니다. 일반 사용자는 Node.js를 설치할 필요가 없습니다. 현재 macOS는 ad-hoc 서명이며 Developer ID 서명·공증이 없습니다. Windows도 개발자 인증서 미서명으로 운영체제의 보안 확인이나 실행 제한이 나타날 수 있습니다.
+macOS는 DMG의 Aurora를 Applications 폴더로 옮기고, Windows는 설치 프로그램을 실행합니다. 일반 사용자는 Node.js를 설치할 필요가 없습니다. macOS 0.1.3은 Developer ID 서명과 Apple 공증을 적용합니다. Windows도 개발자 인증서 미서명으로 운영체제의 보안 확인이나 실행 제한이 나타날 수 있습니다.
 
 ## 주요 기능
 
@@ -51,7 +51,7 @@ macOS는 DMG의 Aurora를 Applications 폴더로 옮기고, Windows는 설치 �
 
 0.1.2부터 Windows는 새 버전을 다운로드한 뒤 재시작을 안내합니다. 지금 재시작하거나 정상 종료 시 설치할 수 있고, 도움말의 **업데이트 확인…**에서도 확인할 수 있습니다. 재시작 전에 저장하지 않은 대화·초안을 확인하세요.
 
-macOS 자동 업데이트에는 Developer ID 서명이 필요합니다. 현재 ad-hoc 개발 프리뷰에서는 비활성화되어 새 설치 파일로 교체해야 합니다. 0.1.1 이하 버전에는 업데이터가 없으므로 새 버전으로 수동 교체해야 합니다. 실제 버전 간 자동 업데이트는 별도 검증이 필요합니다.
+macOS 자동 업데이트에는 Developer ID 서명이 필요합니다. 이전 ad-hoc 개발 프리뷰는 새 서명 설치 파일로 한 번 교체해야 합니다. 0.1.1 이하 버전에는 업데이터가 없으므로 새 버전으로 수동 교체해야 합니다. 실제 버전 간 자동 업데이트는 별도 검증이 필요합니다.
 
 ## 소스에서 실행
 
