@@ -6,6 +6,7 @@ directories:
   output: distribution/${version}
   buildResources: build
 files:
+  - AI-TRAINING-NOTICE.md
   - dist/**/*
   - electron/**/*
   - src/catalog.json
