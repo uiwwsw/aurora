@@ -22,7 +22,17 @@ const expected = [
   `Aurora-${pkg.version}-mac-x64.zip`,
   `Aurora-${pkg.version}-windows-x64.exe`,
 ];
-const names = await readdir(directory, { recursive: true });
+const discovered = await readdir(directory, { recursive: true });
+// Rechecking generated output must use the original runner artifacts, rather
+// than treating flattened copies and merged feeds as a second input build.
+const nestedBasenames = new Set(
+  discovered
+    .filter((name) => path.basename(name) !== name)
+    .map((name) => path.basename(name)),
+);
+const names = discovered.filter(
+  (name) => path.basename(name) !== name || !nestedBasenames.has(name),
+);
 const manifest = {
   version: pkg.version,
   tag,

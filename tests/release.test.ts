@@ -87,6 +87,7 @@ function verify(cwd: string) {
 test("release merges macOS architectures and verifies update checksums before publishing", () =>
   fixture((root) => {
     assert.match(verify(root), /Verified 5 installers/);
+    assert.match(verify(root), /Verified 5 installers/);
     const merged = yaml.load(
       readFileSync(path.join(root, "release-assets/latest-mac.yml"), "utf8"),
     );
