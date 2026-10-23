@@ -1131,7 +1131,7 @@ function App() {
               </>
             ) : (
               <>
-                <details data-ai-training-notice="true" className="ai-training-notice print:hidden"><summary>AI 학습·수집 반대 · AI training opt-out</summary><p>사전 서면 동의 없는 AI 학습·미세조정 및 학습용 데이터 수집에 반대합니다.</p><p lang="en">No AI training, fine-tuning or training-data collection without prior written consent.</p><p>기존 라이선스와 제삼자·사용자 콘텐츠의 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged.</p><a href="./ai-training-notice.txt">전문 · Full notice</a></details><section
+                <section
                   className="routing-settings"
                   aria-label="모델 기본 설정"
                 >

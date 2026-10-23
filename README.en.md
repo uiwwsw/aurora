@@ -88,6 +88,4 @@ Releases use a verified source commit, platform packaging and installed-app laun
 
 Code is licensed under [MIT](LICENSE). The SUITE font has a [separate license](public/fonts/LICENSE).
 
-## AI training and data collection notice
-
-No AI training, fine-tuning or training-data collection without prior written consent. See [AI-TRAINING-NOTICE.md](AI-TRAINING-NOTICE.md). Existing licenses and third-party/user rights remain unchanged.
+AI 학습·미세조정 및 학습용 데이터 수집에 대한 권리자 의사는 [AI 이용 고지 / AI use notice](AI-TRAINING-NOTICE.md)를 참고하세요.
