@@ -3,7 +3,16 @@
   "runtime": "electron-react-typescript",
   "execution": "automatic",
   "requireCleanGit": true,
-  "verify": ["./dev npm run build", "./dev npm test"],
-  "deploy": ["./dev vercel deploy --prod --yes"],
-  "healthchecks": ["https://aurora-two-virid.vercel.app/health.json"]
+  "verify": [
+    "./dev npm run build:web",
+    "./dev npm test"
+  ],
+  "deploy": [
+    "./dev vercel deploy --prod --yes"
+  ],
+  "healthchecks": [
+    "https://aurora-two-virid.vercel.app/health.json",
+    "https://aurora-two-virid.vercel.app/en/",
+    "https://aurora-two-virid.vercel.app/sitemap.xml"
+  ]
 }

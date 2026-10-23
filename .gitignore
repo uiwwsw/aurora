@@ -29,3 +29,5 @@ release-assets/
 AGENTS.md
 CLAUDE.md
 GEMINI.md
+
+web-dist/

@@ -1,50 +1,61 @@
-# Aurora
+# Aurora · 오로라
 
-작업 범위와 예상 토큰을 검토한 뒤 실행 여부를 결정하는 데스크톱 AI 작업 공간.
-이름은 *Auto Router · Low AI*에서 가져왔습니다.
+**하나의 대화에서 AI 모델과 예상 토큰을 실행 전에 검토하는 데스크톱 작업 공간.**
 
-**개발 프리뷰 · MIT**
+[한국어](README.md) · [English](README.en.md) · [웹 데모](https://aurora-two-virid.vercel.app/) · [English overview](https://aurora-two-virid.vercel.app/en/) · [문서](docs/README.md)
 
-## 다운로드
-
-[![macOS Apple Silicon](https://img.shields.io/badge/macOS-Apple%20Silicon-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-arm64.dmg)
-[![macOS Intel](https://img.shields.io/badge/macOS-Intel-607b64?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-x64.dmg)
-[![Windows x64](https://img.shields.io/badge/Windows-x64-4169a1?style=for-the-badge)](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-windows-x64.exe)
-
-[릴리스 · ZIP · 체크섬](https://github.com/uiwwsw/aurora/releases/tag/v0.1.2)
-
-macOS는 DMG에서 Aurora를 Applications 폴더로 옮기고, Windows는 EXE 설치 프로그램을 실행합니다. **Node.js는 필요하지 않습니다.**
-macOS는 ad-hoc 서명이며 Developer ID 서명·공증은 없습니다. Windows도 개발자 인증서 미서명 상태로, 운영체제의 보안 확인 또는 실행 제한이 나타날 수 있습니다.
-
+개발 프리뷰 · [MIT](LICENSE) · macOS / Windows
 
 ![Aurora 작업 공간](docs/images/aurora-v0.1.png)
 
-## 소개
+## 바로 체험하기
 
-Aurora는 요청의 범위, 사용할 모델, 예상 소모량을 먼저 확인하는 흐름을 실험합니다.
-하나의 대화에서 작업을 이어가고, 정리가 필요하면 이전 내용을 묶거나 보관합니다.
-세션을 직접 관리하는 레거시 모드도 제공합니다.
+[브라우저 데모 열기](https://aurora-two-virid.vercel.app/) — 설치 없이 작업 정리, 모델 비교와 토큰 범위 미리보기를 체험합니다. 웹 데모는 외부 AI를 호출하지 않으며, 대화형 화면은 현재 한국어입니다.
 
-기본은 로컬 미리보기입니다. 현재 main에는 OpenAI·Anthropic API 어댑터와 역할별 모델 설정이 추가되어 있습니다.
-실제 API 키로 호출하는 라이브 검증과 계정 잔여 한도 연동은 아직 하지 않았습니다.
+실제 제공자 연결과 텍스트 답변 실행은 설치 앱에서 사용합니다. 공개 0.1.2 프리뷰는 내부 분석을 명시적으로 요청하고 실행 모델을 직접 선택하는 흐름입니다. 이름의 *Auto Router · Low AI*는 제품 방향이며, 완성된 자동 라우팅을 뜻하지 않습니다.
 
-## 기능
+## 다운로드 · 0.1.2
 
-- 하나의 대화 흐름과 작업 묶음, 보관·휴지통·복원
-- 직접 세션을 생성하고 전환하는 레거시 모드
-- 내부 분석 모델과 기본 실행 모델의 독립 설정
-- 요청마다 실행 모델을 선택하고 예상 입력·출력 토큰 검토
-- API 키가 있을 때 별도 내부 분석과 텍스트 답변 실행
-- 계획용 토큰 예산 대비 비율 표시
-- 검색, 선택적 로컬 저장, 라이트·다크 테마
-- 설치 앱의 새 버전 자동 확인·다운로드와 재시작 적용(Windows, 서명된 macOS)
+| 운영체제 | 설치 파일 |
+| --- | --- |
+| macOS · Apple Silicon | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-arm64.dmg) |
+| macOS · Intel | [DMG](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-mac-x64.dmg) |
+| Windows · x64 | [EXE](https://github.com/uiwwsw/aurora/releases/download/v0.1.2/Aurora-0.1.2-windows-x64.exe) |
 
-자동 정리는 로컬 규칙으로 동작합니다. 내부 분석은 명시적으로 요청해야 모델을 호출합니다.
-실행 모델은 사용자가 선택하며, 현재는 텍스트 답변만 지원합니다. 파일 수정·셸 실행은 하지 않습니다.
+[ZIP · 변경 기록 · 체크섬과 서명 정보](https://github.com/uiwwsw/aurora/releases/tag/v0.1.2)
+
+macOS는 DMG의 Aurora를 Applications 폴더로 옮기고, Windows는 설치 프로그램을 실행합니다. 일반 사용자는 Node.js를 설치할 필요가 없습니다. 현재 macOS는 ad-hoc 서명이며 Developer ID 서명·공증이 없습니다. Windows도 개발자 인증서 미서명으로 운영체제의 보안 확인이나 실행 제한이 나타날 수 있습니다.
+
+## 주요 기능
+
+- **하나의 대화와 작업 정리:** 관련 대화를 묶고, 보관·휴지통으로 이동하거나 복원합니다. 직접 세션을 관리하는 레거시 모드도 제공합니다.
+- **분리된 모델 역할:** 내부 분석 모델과 기본 실행 모델을 따로 설정하고 요청마다 실행 모델을 선택합니다.
+- **실행 전 사용량 검토:** 현재 문맥을 포함한 예상 입력·출력 토큰 범위를 비교하고 직접 정한 계획 예산과 대조합니다.
+- **실측 사용량 표시:** 제공자가 반환하는 실제 입력·출력 토큰을 예상치와 구분합니다.
+- **기기 내 작업 관리:** 검색, 선택적 대화 저장, 라이트·다크 테마를 지원합니다.
+- **업데이트:** Windows는 시작할 때와 6시간마다 새 버전을 확인하고 백그라운드로 다운로드합니다.
+
+자동 정리 제안은 로컬 규칙 기반입니다. 모델 추천과 실행은 별개의 동작이며, 현재 텍스트 답변만 지원합니다. 파일 수정·셸 실행은 제공하지 않습니다.
+
+## 토큰 추정과 데이터
+
+토큰 범위는 **문자 수와 모델 등급별 출력 가정**입니다. 모델별 실제 사용 이력에 기반한 정량 예측이나 확정 비용이 아니며, 같은 등급에는 같은 범위를 표시합니다. 예산 비율은 직접 입력한 계획 예산 대비 값으로 계정 잔여 한도를 뜻하지 않습니다.
+
+호출별 생성 상한은 내부 분석 2,048토큰, 본 작업 4,096토큰입니다. 입력과 분석 비용은 별도이며 전체 작업의 강제 예산 제한은 아닙니다. 출력 상한에 도달하면 응답이 미완성일 수 있습니다. 정해진 토큰으로 기능 완성을 보장하지 않습니다.
+
+웹 미리보기는 대화를 AI 제공자에게 전송하지 않습니다. 설치 앱에서 제공자 호출을 실행하면 요청과 선택한 문맥을 해당 제공자에게 전송합니다. 대화 저장은 기본 꺼짐이며, 켜면 현재 기기에 기록합니다. 암호화 보관함은 아닙니다. 저장을 끄면 저장 사본을 제거하고 현재 창의 대화는 유지합니다.
+
+제공자 연결의 일반적인 설정 방법은 [구성 가이드](docs/configuration.md)를 참고하세요.
+
+## 앱 업데이트
+
+0.1.2부터 Windows는 새 버전을 다운로드한 뒤 재시작을 안내합니다. 지금 재시작하거나 정상 종료 시 설치할 수 있고, 도움말의 **업데이트 확인…**에서도 확인할 수 있습니다. 재시작 전에 저장하지 않은 대화·초안을 확인하세요.
+
+macOS 자동 업데이트에는 Developer ID 서명이 필요합니다. 현재 ad-hoc 개발 프리뷰에서는 비활성화되어 새 설치 파일로 교체해야 합니다. 0.1.1 이하 버전에는 업데이터가 없으므로 새 버전으로 수동 교체해야 합니다. 실제 버전 간 자동 업데이트는 별도 검증이 필요합니다.
 
 ## 소스에서 실행
 
-Node.js 24 이상과 npm이 필요합니다.
+Node.js 24 이상이 필요합니다.
 
 ```bash
 git clone https://github.com/uiwwsw/aurora.git
@@ -53,87 +64,26 @@ npm ci
 npm start
 ```
 
-Electron + React + TypeScript로 구성되어 있으며 별도 웹 서버 없이 실행합니다.
-미리보기에는 API 키가 필요하지 않습니다. 일반 사용자는 위의 설치 파일을 사용하면 됩니다.
+| 명령 | 용도 |
+| --- | --- |
+| `npm run build` | 데스크톱 프런트엔드 타입 검사·빌드 |
+| `npm run build:web` | 한국어 데모·영어 소개와 검색 메타데이터 생성 |
+| `npm test` | 도메인·제공자 어댑터·업데이트·웹 생성 검증 |
+| `npm run test:desktop` | 독립 QA 프로필로 Electron UI 검증 |
+| `npm run package:mac` | macOS DMG·ZIP 생성 |
+| `npm run package:win` | Windows에서 x64 EXE 생성 |
 
-## 모델 설정과 API 연결
+모델 API 테스트는 모의 응답을 사용합니다. 라이브 제공자 응답, 전체 작업 비용 제어, 추천 품질은 별도 평가가 필요합니다. 로컬 개발은 저장소의 `AGENTS.md`와 실행 래퍼를 따릅니다.
 
-| 기본 구성 | 내부 분석·추천 | 기본 실행 모델 |
-| --- | --- | --- |
-| OpenAI | GPT-6 Luna (`gpt-6-luna`) | GPT-6.1 Sol (`gpt-6.1-sol`) |
-| Claude | Claude Haiku 5.5 (`claude-haiku-5-5`) | Claude Sonnet 5.5 (`claude-sonnet-5-5`) |
+## 배포와 문서
 
-설정에서 두 역할을 독립적으로 바꿀 수 있습니다. 제공자를 조합할 수도 있고, 실행 모델은 요청마다 다시 선택합니다.
-모델 설정은 대화 저장과 별도로 기기에 유지합니다.
+버전을 올려 main에 반영하면 GitHub Actions가 검증·태그 생성·플랫폼별 패키징·설치 후 실행 확인을 거쳐 릴리스를 게시합니다. 같은 버전의 일반 변경은 설치 파일을 다시 게시하지 않습니다. 웹은 Vercel의 main 자동 배포를 사용하며, 테스트 배포는 검색 색인에서 제외합니다.
 
-1. 소스 실행에서는 `.env.example`을 `.env`로 복사합니다. 설치 앱에서는 앱 데이터 폴더(macOS: `~/Library/Application Support/Aurora`, Windows: `%APPDATA%/Aurora`)에 `.env`를 만들고 사용할 제공자의 `OPENAI_API_KEY` 또는 `ANTHROPIC_API_KEY`를 설정합니다. 환경변수로 전달해도 됩니다.
-2. 앱을 재시작하고 설정에서 **실제 API 사용**을 켭니다. 이 스위치만으로 요청을 전송하지는 않습니다.
-3. 검토창에서 **내부 모델로 분석**을 누르면 요청과 현재 문맥을 분석 모델에 전송합니다. 분석에도 별도 사용량이 발생합니다.
-4. 추천을 확인하고 실행 모델을 고른 뒤 **선택한 모델로 API 실행**을 누릅니다. 분석을 건너뛰고 직접 선택할 수도 있습니다.
+- [문서 목차](docs/README.md)
+- [릴리스와 서명·자동 업데이트](docs/releases.md)
+- [구성 가이드](docs/configuration.md)
+- [제품 비전과 실행 예산 설계](docs/product-vision.md)
+- [웹 검색 구조](docs/seo.md)
+- [기여 방법](CONTRIBUTING.md) · [Issues](https://github.com/uiwwsw/aurora/issues)
 
-키 감지는 연결이나 모델 접근 성공의 검증이 아닙니다. 실패 시 자동 재시도하거나 다른 모델로 바꾸지 않습니다.
-키 값은 renderer나 대화 저장소로 전달하지 않으며 `.env`는 Git에서 제외합니다.
-이 구현은 API 키 방식이며 ChatGPT·Claude 웹 로그인은 구현하지 않았습니다.
-
-모델 목록 확인: [OpenAI](https://developers.openai.com/api/docs/models), [Claude](https://platform.claude.com/docs/en/models/overview) (2026-10-19).
-계정별 접근 권한은 실제 API에서 확인해야 합니다.
-
-## 토큰과 예산
-
-모델별 비교 수치는 아직 실측이나 내부 모델의 토큰 예측이 아닌 **문자 수와 등급별 출력 가정**입니다.
-같은 등급에는 같은 범위를 표시합니다. 내부 모델은 작업 범위와 모델 추천을 제공하며, 정량 예측은 후속 작업입니다.
-계획용 예산의 %는 직접 입력한 토큰 예산 대비 비율이며 구독 한도의 %가 아닙니다.
-API 응답의 실제 입력·출력 사용량은 예상치와 구분해 표시합니다.
-
-호출별 생성 상한은 내부 분석 2,048토큰, 본 작업 4,096토큰입니다. 입력은 별도이며, 이 상한은 전체 작업의 토큰·비용 예산이 아닙니다.
-출력·추론·도구 호출·재시도량을 사전에 확정할 수 없으며 상한에 도달하면 응답이 미완성으로 끝날 수 있습니다.
-**정해진 토큰으로 기능 완성을 보장하지 않습니다.** 전체 작업 예산의 강제 제한은 아직 구현하지 않았습니다.
-
-관련 설계와 근거는 [실행 예산 설계](docs/product-vision.md)에 정리했습니다.
-
-## 개발
-
-```bash
-npm run build          # 타입 검사 및 프런트엔드 빌드
-npm test               # 도메인·API 어댑터 테스트
-npm run test:desktop   # Electron UI 테스트
-npm run package:mac    # macOS DMG·ZIP
-npm run package:win    # Windows x64 EXE (Windows에서 빌드)
-```
-
-macOS·Windows CI에서 빌드와 단위 테스트를 검증합니다. 태그 릴리스 파이프라인은 macOS arm64·x64와 Windows x64 설치 파일을 네이티브 러너에서 만들고, 설치 후 실행 검증을 통과한 파일만 공개합니다.
-API 테스트는 가짜 응답을 사용하며 실제 키나 과금 요청을 사용하지 않습니다.
-
-## 릴리스 자동화
-
-package.json의 버전을 올려 main에 푸시하면 GitHub Actions가 테스트·빌드 후 버전 태그를 만들고, 패키징 → 설치·실행 확인 → 릴리스 첨부를 수행합니다. 기존 버전의 일반 커밋은 검증만 합니다. 버전 태그를 직접 푸시해도 같은 배포를 실행합니다. 태그와 package.json 버전이 일치해야 하며 세 플랫폼 검증이 모두 성공해야 공개합니다. 릴리스에는 SHA-256 체크섬과 서명 상태를 기록한 manifest가 포함됩니다. 공개된 설치 파일은 같은 태그로 덮어쓰지 않습니다. 자세한 절차는 [릴리스 문서](docs/releases.md)를 참고하세요.
-
-## 다음 단계
-
-- 실제 키를 사용하는 제공자 호출과 사용량 검증
-- 입력 토큰 계산과 실행 기록에 기반한 정량 추정
-- 작업 범위·완료 조건 확인과 단계별 예산 승인
-- 모델 추천과 자동 정리의 품질 평가
-- 배포 인증서·macOS 공증 자격 증명 등록과 실제 버전 간 업데이트 검증
-
-## 데이터
-
-미리보기에서는 외부로 요청을 전송하지 않습니다. API 모드에서는 분석·실행 버튼을 눌렀을 때 선택한 제공자에게 요청과 해당 문맥을 전송합니다.
-대화 저장은 기본 꺼짐이며, 켜면 이 기기에 기록합니다. 암호화 보관함은 아닙니다.
-저장을 끄면 저장 사본은 제거하고 현재 창의 대화는 유지합니다.
-
-## 기여
-
-버그와 제안은 [Issues](https://github.com/uiwwsw/aurora/issues), 변경 절차는 [CONTRIBUTING.md](CONTRIBUTING.md)를 참고하세요.
-
-## 라이선스
-
-[MIT](LICENSE)
-
-## 앱 업데이트
-
-0.1.2부터 설치 앱은 시작할 때와 6시간마다 새 개발 프리뷰를 확인합니다. 새 버전은 백그라운드로 다운로드하고, 준비되면 지금 재시작하거나 나중에 정상 종료 시 설치할 수 있습니다. 도움말의 **업데이트 확인…**에서 직접 확인할 수도 있습니다. 재시작 전에 저장하지 않은 대화와 초안을 확인하세요.
-
-Windows NSIS와 Developer ID로 서명된 macOS 앱을 지원합니다. 현재 macOS 개발 프리뷰는 ad-hoc 서명이라 자동 업데이트가 비활성화됩니다. 기존 0.1.1 이하 버전에는 업데이터가 없으므로 새 설치 파일로 한 번 교체해야 합니다. 개발 실행과 QA는 업데이트 서버에 접속하지 않습니다.
-
-[웹 미리보기](https://aurora-two-virid.vercel.app)는 Vercel의 GitHub 연결을 사용합니다. 브라우저에서는 로컬 미리보기만 제공하며, 데스크톱 API 연결과 앱 업데이트는 설치 앱에서 사용합니다. 데스크톱 설치 파일과 업데이트 메타데이터는 GitHub Releases에서 제공합니다.
+[MIT 라이선스](LICENSE). SUITE 글꼴은 [별도 라이선스](public/fonts/LICENSE)를 따릅니다.

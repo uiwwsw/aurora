@@ -12,7 +12,8 @@
     "하나의 대화와 작업 정리·레거시 모드",
     "내부 분석·실행 모델 설정과 요청별 선택",
     "macOS Apple Silicon·Intel 및 Windows x64 설치 파일",
-    "모델·토큰 가정 검토와 선택적 로컬 저장"
+    "모델·토큰 가정 검토와 선택적 로컬 저장",
+    "한국어 웹 데모·영어 제품 소개와 문서"
   ],
   "status": "development",
   "links": [
@@ -31,6 +32,6 @@
   ],
   "evidence": {
     "verifiedAt": "2026-10-23",
-    "note": "v0.1.2 Desktop release CI(39875067106)가 macOS arm64·Intel 및 Windows x64의 테스트·패키징·설치 후 실행 검증과 게시를 완료함. 공개 설치 파일과 업데이트 피드의 HTTP 200, manifest의 12개 파일 크기·GitHub SHA-256 digest 일치를 확인함. Vercel main 자동 배포와 웹·health.json·자체 호스팅 SUITE 글꼴 HTTP 200, Chrome 데스크톱·390px 화면을 확인함. macOS는 ad-hoc 서명이며 Windows도 인증서 미서명임. 실제 버전 간 업데이트·라이브 API 호출은 미검증이며 development 상태 유지."
+    "note": "v0.1.2 Desktop release CI(39875067106)가 macOS arm64·Intel 및 Windows x64의 테스트·패키징·설치 후 실행 검증과 게시를 완료함. 공개 설치 파일과 업데이트 피드의 HTTP 200, manifest의 12개 파일 크기·GitHub SHA-256 digest 일치를 확인함. Vercel main 자동 배포와 웹·health.json·자체 호스팅 SUITE 글꼴 HTTP 200, Chrome 데스크톱·390px 화면을 확인함. macOS는 ad-hoc 서명이며 Windows도 인증서 미서명임. 실제 버전 간 업데이트·라이브 API 호출은 미검증이며 development 상태 유지. 한국어·영어 웹 소개와 hreflang·canonical·robots·사이트맵·구조화 데이터의 공개 HTML을 확인함."
   }
 }
