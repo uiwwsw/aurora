@@ -77,7 +77,7 @@ Provider tests use mocked responses. Live provider behavior, whole-task cost enf
 
 ## Releases and documentation
 
-A version bump on main triggers validation, tag creation, platform packaging, installed-app launch checks and publication through GitHub Actions. Ordinary commits with an existing version do not republish installers. Vercel deploys the web preview from main; preview deployments exclude search indexing.
+Releases use a verified source commit, platform packaging and installed-app launch checks. macOS publication requires both architectures to be Developer ID signed and notarized; tags and ordinary pushes do not automatically access signing credentials. Vercel deploys the web preview from main; preview deployments exclude search indexing.
 
 - [Documentation index](docs/README.md)
 - [Release, signing and update guide](docs/releases.md) — Korean
