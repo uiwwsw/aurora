@@ -50,3 +50,8 @@ main에는 API 키를 이용한 내부 분석·텍스트 실행 어댑터가 추
 호출별 생성 상한은 분석 2,048·실행 4,096토큰이고 입력은 별도이다. 이는 전체 작업 예산 제어가 아니다.
 응답의 실제 사용량과 미완성 상태를 표시하고, API 오류를 자동 재시도하지 않는다.
 단위·UI 테스트는 모의 응답으로 검증했으며 실제 키를 사용하는 라이브 호출은 아직 검증하지 않았다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI training or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

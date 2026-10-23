@@ -51,6 +51,7 @@ import {
   type Completion,
 } from "./routing";
 import "./style.css";
+import aiTrainingNotice from "../AI-TRAINING-NOTICE.md?raw";
 function readSaved(): Workspace {
   try {
     return restoreWorkspace(
@@ -1131,6 +1132,23 @@ function App() {
               </>
             ) : (
               <>
+                <section
+                  className="ai-training-notice"
+                  aria-label="AI 학습·수집 고지"
+                >
+                  <h3>AI 학습·수집 고지 / AI training notice</h3>
+                  <p>
+                    사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI
+                    training or training-data collection without prior written
+                    consent.
+                  </p>
+                  <details>
+                    <summary>전체 고지 / Full notice</summary>
+                    {aiTrainingNotice.split("\n\n").map((paragraph, index) => (
+                      <p key={index}>{paragraph.replace(/^# /, "")}</p>
+                    ))}
+                  </details>
+                </section>
                 <section
                   className="routing-settings"
                   aria-label="모델 기본 설정"

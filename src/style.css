@@ -1481,3 +1481,23 @@ html[data-theme="dark"] .composer {
     box-shadow: -8px 0 30px #0002;
   }
 }
+
+.ai-training-notice {
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 14px;
+  margin-bottom: 18px;
+  font-size: 12px;
+  line-height: 1.75;
+}
+.ai-training-notice h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+.ai-training-notice p {
+  color: var(--muted);
+}
+.ai-training-notice summary {
+  cursor: pointer;
+  color: var(--accent);
+}

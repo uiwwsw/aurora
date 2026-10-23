@@ -13,3 +13,8 @@
 | [Changelog · 변경 기록](../CHANGELOG.md) | Version history / 버전별 변경 |
 
 The public release defines available behavior. Design documents can describe future work. / 현재 동작은 공개 버전을 기준으로 하며 설계 문서에는 향후 기능이 포함될 수 있습니다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·미세조정·학습용 수집에 반대합니다. No AI training, fine-tuning or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 콘텐츠의 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

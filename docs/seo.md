@@ -20,3 +20,8 @@ Keep page copy consistent with the public release. When adding a translated page
 Ownership verification, sitemap submission, crawling and indexing are separate steps. Search engines can take time to process changes and decide whether to index or rank a page. Technical checks and submissions do not guarantee exposure or ranking.
 
 References: [Google localized versions](https://developers.google.com/search/docs/specialty/international/localized-versions), [Google sitemaps](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap), [Naver preferred URLs and robots metadata](https://searchadvisor.naver.com/guide/markup-structure), [Naver SEO basics](https://searchadvisor.naver.com/guide/seo-basic-create).
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·미세조정·학습용 수집에 반대합니다. No AI training, fine-tuning or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 콘텐츠의 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

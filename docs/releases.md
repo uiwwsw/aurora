@@ -49,3 +49,8 @@ npm run package:win
 패키지에는 dist, Electron 런타임 코드, 모델 catalog와 필요한 의존성만 포함합니다.
 .env, 테스트, QA 프로필, 개발 문서와 도구는 포함하지 않습니다.
 설치 앱의 키 설정은 앱 데이터 폴더의 .env 또는 환경변수로 전달합니다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI training or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

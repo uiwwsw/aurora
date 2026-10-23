@@ -31,3 +31,8 @@ The analyzer generation cap is 2,048 tokens and the executor cap is 4,096. Input
 웹 데모에서는 외부 AI 호출을 하지 않습니다. 설치 앱에서 사용할 제공자의 구성 값을 환경변수 또는 기기 내 `.env`로 전달하고 앱을 재시작합니다. 실제 값을 Git·이슈·스크린샷에 포함하지 마세요.
 
 0.1.2에서는 내부 분석과 실행을 별도로 요청하고 실행 모델을 직접 선택합니다. 분석도 사용량이 발생하며, 오류 시 자동 재시도·모델 변경은 하지 않습니다. 입력 값 감지는 연결 성공이나 계정 잔여량의 확인이 아닙니다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI training or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

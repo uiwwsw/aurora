@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+# Voluntary preferences for training crawlers; ordinary search remains allowed.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /

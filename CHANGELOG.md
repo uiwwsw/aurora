@@ -32,3 +32,8 @@
 - macOS 로직·Electron UI 검증과 기여 가이드
 
 실제 AI 응답·계정 잔여량·한도 환산은 미연결이며 Windows 실행·패키징은 미검증입니다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI training or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](AI-TRAINING-NOTICE.md)

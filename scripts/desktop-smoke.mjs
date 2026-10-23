@@ -32,6 +32,9 @@ try {
     await page
       .getByRole("button", { name: "모드 및 예산 설정", exact: true })
       .click();
+    await expect(
+      page.getByLabel("AI 학습·수집 고지", { exact: true }),
+    ).toBeVisible();
   };
   const close = () =>
     page.getByRole("button", { name: "닫기", exact: true }).click();

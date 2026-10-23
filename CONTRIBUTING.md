@@ -28,3 +28,8 @@ npm run test:desktop
 ## 라이선스
 
 기여 코드는 프로젝트와 동일한 [MIT 라이선스](LICENSE)를 따릅니다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·미세조정·학습용 수집에 반대합니다. No AI training, fine-tuning or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 콘텐츠의 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](AI-TRAINING-NOTICE.md)

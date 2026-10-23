@@ -57,6 +57,9 @@ jobs:
         with:
           node-version: "24"
           cache: npm
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.x"
       - name: Check release version
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
@@ -74,6 +77,8 @@ jobs:
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run package -- --${{ matrix.platform }} --${{ matrix.arch }}
+      - name: Verify packaged AI notice
+        run: python .github/scripts/check-ai-notice.py --package-dir distribution
       - name: Install and launch macOS DMG
         if: runner.os == 'macOS'
         shell: bash

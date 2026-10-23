@@ -184,6 +184,22 @@ export async function buildWeb({
   await rm(outputDir, { recursive: true, force: true });
   await cp(inputDir, outputDir, { recursive: true });
   const source = await readFile(path.join(inputDir, "index.html"), "utf8");
+  const notice = await readFile(
+    path.join(inputDir, "AI-TRAINING-NOTICE.md"),
+    "utf8",
+  );
+  const crawlerPolicy = await readFile(
+    path.join(inputDir, "robots.txt"),
+    "utf8",
+  );
+  if (
+    !notice.includes("prior written consent") ||
+    !crawlerPolicy.includes("User-agent: GPTBot")
+  )
+    throw new Error(
+      "AI notice and training-crawler policy must survive the desktop build",
+    );
+
   const assets = [
     ...source.matchAll(
       /<(?:script\b[^>]*\bsrc=|link\b[^>]*\bhref=)["']([^"']+)["'][^>]*(?:><\/script>|>)/g,
@@ -196,7 +212,7 @@ export async function buildWeb({
       lang === "ko"
         ? `<div id="root"><section class="site-notice"><h1>${t.heading}</h1><p>${t.browser}</p></section></div><noscript><p class="site-notice">${t.nojs}</p></noscript>`
         : "";
-    const html = `<!doctype html><html lang="${lang}"><head>${head(lang, production)}${lang === "ko" ? assets.join("") : ""}</head><body class="${lang === "ko" ? "site-web-demo" : "site-english"}">${nav}${demo}${body(lang)}<footer class="site-footer">Aurora · <a href="${repo}/blob/main/LICENSE">MIT</a> · <a href="${release}">${t.download}</a></footer></body></html>`;
+    const html = `<!doctype html><html lang="${lang}"><head>${head(lang, production)}${lang === "ko" ? assets.join("") : ""}</head><body class="${lang === "ko" ? "site-web-demo" : "site-english"}">${nav}${demo}${body(lang)}<footer class="site-footer">Aurora · <a href="${repo}/blob/main/LICENSE">MIT</a> · <a href="${release}">${t.download}</a><p>사전 서면 동의 없는 AI 학습·수집에 반대합니다. No AI training or training-data collection without prior written consent. <a href="/legal/ai-training/">AI 학습·수집 고지 / Full notice</a></p></footer></body></html>`;
     const file = path.join(
       outputDir,
       lang === "ko" ? "index.html" : "en/index.html",
@@ -209,15 +225,28 @@ export async function buildWeb({
     path.join(outputDir, "sitemap.xml"),
     `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"><url><loc>${origin}/</loc>${alternate}</url><url><loc>${origin}/en/</loc>${alternate}</url></urlset>`,
   );
+  const robots = crawlerPolicy.replace(/^Sitemap:.*$/gm, "").trim();
   await writeFile(
     path.join(outputDir, "robots.txt"),
     production
-      ? `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`
-      : `User-agent: *\nDisallow: /\n`,
+      ? `${robots}\nSitemap: ${origin}/sitemap.xml\n`
+      : robots.replace("Allow: /", "Disallow: /") + "\n",
   );
+  const legal = `<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex,follow"><title>AI 학습·수집 고지 / AI training notice — Aurora</title><link rel="canonical" href="${origin}/legal/ai-training/"><style>${styles}</style></head><body><main class="site-content">${notice
+    .split("\n\n")
+    .map((p, i) =>
+      i === 0
+        ? `<h1>${escape(p.replace(/^# /, ""))}</h1>`
+        : `<p>${escape(p)}</p>`,
+    )
+    .join(
+      "",
+    )}<a href="/">Aurora</a> · <a href="/en/">English overview</a> · <a href="/AI-TRAINING-NOTICE.md">Markdown notice</a></main></body></html>`;
+  await mkdir(path.join(outputDir, "legal/ai-training"), { recursive: true });
+  await writeFile(path.join(outputDir, "legal/ai-training/index.html"), legal);
   await writeFile(
     path.join(outputDir, "404.html"),
-    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page not found — Aurora</title><style>${styles}</style></head><body><main class="site-content"><h1>Page not found</h1><a href="/">Aurora demo</a> · <a href="/en/">English overview</a></main></body></html>`,
+    `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Page not found — Aurora</title><style>${styles}</style></head><body><main class="site-content"><h1>Page not found</h1><a href="/">Aurora demo</a> · <a href="/en/">English overview</a><p><a href="/legal/ai-training/">AI 학습·수집 고지 / AI training notice</a></p></main></body></html>`,
   );
 }
 if (

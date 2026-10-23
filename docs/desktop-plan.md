@@ -48,3 +48,8 @@ README의 구독 연동 문구만으로 구현 가능성을 확정하지 않는�
 실행 전에 예상 토큰 소모량을 안내하고 진행 여부를 선택하는 경험이 오로라의 중심이다. 원하는 작업인지 확인하기 전에 실행과 소모가 일어나는 문제를 다룬다. AI가 더 많은 일을 맡을수록 작업 범위와 예상 소모를 먼저 이해하고 선택할 수 있어야 한다는 생각에서 출발한다.
 
 작업 의도 확인 → 예상 토큰 범위·근거 검토 → 사용자의 진행 선택을 목표 흐름으로 삼는다. 대화 정리와 모델 추천은 이 판단을 지원한다. 현재 로컬 프로토타입과 구현 목표를 구분하며, 실행 전 확인 UX·토큰 추정·실제 모델 연결을 함께 만들 컨트리뷰터를 찾는다. 자세한 방향은 [제품 비전](product-vision.md)을 따른다.
+
+
+## AI 학습·수집 고지 / AI training notice
+
+사전 서면 동의 없는 AI 학습·학습용 수집에 반대합니다. No AI training or training-data collection without prior written consent. 기존 라이선스와 제삼자·사용자 권리는 유지됩니다. Existing licenses and third-party/user rights remain unchanged. [전체 고지 / Full notice](../AI-TRAINING-NOTICE.md)

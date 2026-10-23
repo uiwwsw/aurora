@@ -17,6 +17,15 @@ async function fixture(
     '<!doctype html><html><head><script type="module" src="./assets/app.js"></script><link rel="stylesheet" href="./assets/app.css"></head><body><div id="root"></div></body></html>',
   );
   await writeFile(path.join(inputDir, "assets/app.js"), "// fixture");
+  await writeFile(
+    path.join(inputDir, "AI-TRAINING-NOTICE.md"),
+    await readFile(new URL("../AI-TRAINING-NOTICE.md", import.meta.url)),
+  );
+  await writeFile(
+    path.join(inputDir, "robots.txt"),
+    await readFile(new URL("../public/robots.txt", import.meta.url)),
+  );
+
   try {
     await run(root, inputDir, outputDir);
   } finally {
@@ -42,6 +51,8 @@ test("web pages expose localized content, self canonicals, reciprocal alternates
         html.includes('content="index,follow,max-image-preview:large"'),
       );
       assert.ok(html.includes('id="overview"'));
+      assert.ok(html.includes('href="/legal/ai-training/"'));
+
       const json = html.match(
         /<script type="application\/ld\+json">(.*?)<\/script>/s,
       )![1];
@@ -87,8 +98,8 @@ test("preview deployments do not invite search indexing", async () =>
         ),
       );
     }
-    assert.equal(
-      await readFile(path.join(outputDir, "robots.txt"), "utf8"),
-      "User-agent: *\nDisallow: /\n",
-    );
+    const robots = await readFile(path.join(outputDir, "robots.txt"), "utf8");
+    assert.ok(robots.includes("User-agent: *\nDisallow: /"));
+    assert.ok(robots.includes("User-agent: GPTBot\nDisallow: /"));
+    assert.ok(robots.includes("User-agent: Google-Extended\nDisallow: /"));
   }));
