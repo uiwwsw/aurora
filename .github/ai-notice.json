@@ -9,6 +9,7 @@
   "robots": [],
   "packages": [],
   "outputs": [
-    "dist"
+    "dist",
+    "web-dist"
   ]
 }

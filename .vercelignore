@@ -1,5 +1,9 @@
 .git
-.github
+.github/*
+!.github/ai-notice.json
+!.github/scripts
+.github/scripts/*
+!.github/scripts/apply-ai-notice.mjs
 .workspace
 .env*
 !.env.example

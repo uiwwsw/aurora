@@ -15,7 +15,7 @@
     "package:mac": "npm run package -- --mac",
     "package:win": "npm run package -- --win --x64",
     "test:package": "node scripts/package-smoke.mjs",
-    "build:web": "npm run build && node scripts/build-web.mjs"
+    "build:web": "npm run build && node scripts/build-web.mjs && node .github/scripts/apply-ai-notice.mjs"
   },
   "dependencies": {
     "electron-updater": "^6.8.9",
