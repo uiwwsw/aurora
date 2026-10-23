@@ -53,7 +53,9 @@ jobs:
           APP="$RUNNER_TEMP/installed/Aurora.app"
           ditto "$MOUNT/Aurora.app" "$APP"
           codesign --verify --deep --strict "$APP"
-          xcrun stapler validate "$APP"
+          # Ticket validation is completed before uploading the signed draft.
+          # Native runners assess Gatekeeper and launch the installed binary;
+          # do not duplicate CloudKit lookups on hosts with broken connectivity.
           spctl --assess --type execute "$APP"
           node scripts/check-packaged-notice.mjs "$APP/Contents/Resources/app.asar"
           node scripts/package-smoke.mjs "$APP/Contents/MacOS/Aurora"
