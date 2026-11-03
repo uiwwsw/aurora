@@ -87,5 +87,3 @@ npm start
 - [기여 방법](CONTRIBUTING.md) · [Issues](https://github.com/uiwwsw/aurora/issues)
 
 [MIT 라이선스](LICENSE). SUITE 글꼴은 [별도 라이선스](public/fonts/LICENSE)를 따릅니다.
-
-AI 학습·미세조정 및 학습용 데이터 수집에 대한 권리자 의사는 [AI 이용 고지 / AI use notice](AI-TRAINING-NOTICE.md)를 참고하세요.

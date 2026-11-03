@@ -17,5 +17,3 @@ Direct-download builds contact GitHub Releases to check for and download updates
 ## Support and rights
 
 Use [GitHub Issues](https://github.com/uiwwsw/aurora/issues) for product support. Do not post private conversations, credentials or personal records in a public issue.
-
-The [AI training and data collection notice](../AI-TRAINING-NOTICE.md) covers the project's own maintained content. It does not change third-party service policies or claim ownership of user content.
