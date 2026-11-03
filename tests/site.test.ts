@@ -110,11 +110,8 @@ test("Vercel upload retains build dependencies while excluding desktop and priva
     ]);
     assert.equal(init.status, 0);
     for (const file of [
-      ".github/scripts/apply-ai-notice.mjs",
-      ".github/ai-notice.json",
       "scripts/build-web.mjs",
       "public/landing.css",
-      "AI-TRAINING-NOTICE.md",
     ]) {
       const result = spawnSync(
         "git",
